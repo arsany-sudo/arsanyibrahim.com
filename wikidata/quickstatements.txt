@@ -1,0 +1,27 @@
+=== STEP 1: human item. Paste only the lines between this marker and the next one. ===
+CREATE
+LAST	Len	"Arsany Ibrahim"
+LAST	Den	"Los Angeles-based entrepreneur and marketer, founder of Elite Créatif"
+LAST	Aen	"arsanyandco"
+LAST	P31	Q5	S854	"https://arsanyibrahim.com/about"	S813	+2026-10-07T00:00:00Z/11
+LAST	P106	Q131524	S854	"https://arsanyibrahim.com/about"	S813	+2026-10-07T00:00:00Z/11
+LAST	P106	Q1900657	S854	"https://arsanyibrahim.com/about"	S813	+2026-10-07T00:00:00Z/11
+LAST	P856	"https://arsanyibrahim.com"	S854	"https://arsanyibrahim.com/about"	S813	+2026-10-07T00:00:00Z/11
+LAST	P2002	"arsanyandco"	S854	"https://x.com/arsanyandco"	S813	+2026-10-07T00:00:00Z/11
+LAST	P2003	"arsany.co"	S854	"https://www.instagram.com/arsany.co/"	S813	+2026-10-07T00:00:00Z/11
+LAST	P6634	"arsany-ibrahim"	S854	"https://www.linkedin.com/in/arsany-ibrahim/"	S813	+2026-10-07T00:00:00Z/11
+LAST	P2397	"UCiI4b0Qw9K8NJLLEwtznh6g"	S854	"https://www.youtube.com/@arsanyandco"	S813	+2026-10-07T00:00:00Z/11
+
+=== STEP 2: company item. Replace QHUMAN with the Q-ID from step 1, then paste only these lines. ===
+CREATE
+LAST	Len	"Elite Créatif"
+LAST	Den	"marketing agency in Los Angeles, California"
+LAST	Aen	"Elite Cratif LLC"
+LAST	P31	Q4830453	S854	"https://opencorporates.com/companies/us_ca/202461811698"	S813	+2026-10-07T00:00:00Z/11
+LAST	P1448	en:"Elite Cratif LLC"	S854	"https://opencorporates.com/companies/us_ca/202461811698"	S813	+2026-10-07T00:00:00Z/11
+LAST	P112	QHUMAN	S854	"https://arsanyibrahim.com/companies/elite-creatif"	S813	+2026-10-07T00:00:00Z/11
+LAST	P856	"https://elitecreatif.com"	S854	"https://elitecreatif.com"	S813	+2026-10-07T00:00:00Z/11
+LAST	P452	Q37038	S854	"https://elitecreatif.com"	S813	+2026-10-07T00:00:00Z/11
+
+=== STEP 3: link the human to the company. Replace QHUMAN and QCOMPANY, then paste this line. ===
+QHUMAN	P1830	QCOMPANY	S854	"https://arsanyibrahim.com/about"	S813	+2026-10-07T00:00:00Z/11
