@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FadeIn } from "@/components/FadeIn";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbGraph } from "@/lib/schema";
-import { COMPANIES, PERSON, SITE } from "@/lib/site";
+import { breadcrumbGraph, orgNode } from "@/lib/schema";
+import { COMPANIES, PERSON, SITE, companyLink } from "@/lib/site";
 
 type Params = { slug: string };
 
@@ -20,14 +20,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const company = COMPANIES.find((c) => c.slug === slug);
   if (!company) return {};
-  const title = `${company.name}`;
-  const description = `${company.name} — ${company.short} Founded by Arsany Ibrahim.`;
+  const title = company.name;
+  const roleLine =
+    company.role === "Partner"
+      ? "Arsany Ibrahim is a partner."
+      : `${company.role} Arsany Ibrahim.`;
+  const description = `${company.name}: ${company.short} ${roleLine}`;
   return {
     title,
     description,
     alternates: { canonical: `/companies/${company.slug}` },
     openGraph: {
-      title: `${company.name} — founded by Arsany Ibrahim`,
+      title: `${company.name} | Arsany Ibrahim`,
       description,
       url: `/companies/${company.slug}`,
       type: "website",
@@ -44,6 +48,7 @@ export default async function CompanyPage({
   const company = COMPANIES.find((c) => c.slug === slug);
   if (!company) notFound();
 
+  const link = companyLink(company);
   const breadcrumb = breadcrumbGraph([
     { name: "Home", url: `${SITE.url}/` },
     { name: "Companies", url: `${SITE.url}/#companies` },
@@ -53,6 +58,10 @@ export default async function CompanyPage({
   return (
     <article className="section">
       <JsonLd id={`schema-breadcrumb-${company.slug}`} data={breadcrumb} />
+      <JsonLd
+        id={`schema-org-${company.slug}`}
+        data={{ "@context": "https://schema.org", ...orgNode(company) }}
+      />
       <div className="container-content max-w-3xl">
         <FadeIn>
           <nav aria-label="Breadcrumb" className="mb-10">
@@ -82,15 +91,11 @@ export default async function CompanyPage({
           <p className="eyebrow mb-4">
             {company.industry}
             {company.founded ? ` · Founded ${company.founded}` : ""}
+            {company.status ? ` · ${company.status}` : ""}
           </p>
           <h1 className="display text-5xl lg:text-6xl tracking-tight">
             {company.name}
           </h1>
-          {company.legalName ? (
-            <p className="text-sm text-[color:var(--color-muted)] mt-2">
-              Legal entity: {company.legalName}
-            </p>
-          ) : null}
         </FadeIn>
 
         <FadeIn delay={0.05}>
@@ -104,7 +109,7 @@ export default async function CompanyPage({
         <FadeIn delay={0.1}>
           <dl className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm border-t border-[color:var(--color-border)] pt-8">
             <div>
-              <dt className="eyebrow mb-1">Founder</dt>
+              <dt className="eyebrow mb-1">{company.role}</dt>
               <dd>
                 <Link
                   href="/about"
@@ -124,32 +129,36 @@ export default async function CompanyPage({
                 <dd>{company.location}</dd>
               </div>
             ) : null}
-            <div>
-              <dt className="eyebrow mb-1">Website</dt>
-              <dd>
-                <a
-                  href={company.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[color:var(--color-accent)] hover:underline underline-offset-4"
-                >
-                  {company.domain} ↗
-                </a>
-              </dd>
-            </div>
+            {link ? (
+              <div>
+                <dt className="eyebrow mb-1">Website</dt>
+                <dd>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[color:var(--color-accent)] hover:underline underline-offset-4"
+                  >
+                    {link.label} ↗
+                  </a>
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </FadeIn>
 
         <FadeIn delay={0.15}>
           <div className="mt-12 flex flex-wrap gap-4">
-            <a
-              href={company.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center bg-[color:var(--color-accent)] text-[color:var(--color-bg)] px-6 py-3 text-sm font-medium hover:bg-[color:var(--color-text)] transition-colors"
-            >
-              Visit {company.name}
-            </a>
+            {link ? (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center bg-[color:var(--color-accent)] text-[color:var(--color-bg)] px-6 py-3 text-sm font-medium hover:bg-[color:var(--color-text)] transition-colors"
+              >
+                Visit {company.name}
+              </a>
+            ) : null}
             <Link
               href="/#companies"
               className="inline-flex items-center justify-center border border-[color:var(--color-border)] px-6 py-3 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)] transition-colors"

@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
     default: SITE.title,
-    template: "%s — Arsany Ibrahim",
+    template: "%s | Arsany Ibrahim",
   },
   description: SITE.description,
   authors: [{ name: PERSON.fullName, url: `${SITE.url}/about` }],
@@ -62,7 +62,6 @@ export const metadata: Metadata = {
     ],
     firstName: PERSON.givenName,
     lastName: PERSON.familyName,
-    username: "arsanyibrahim",
   },
   twitter: {
     card: "summary_large_image",

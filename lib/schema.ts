@@ -1,10 +1,14 @@
-import { COMPANIES, FAQ, PERSON, POSTS, SITE } from "./site";
+import { COMPANIES, FAQ, PERSON, POSTS, SITE, type Company } from "./site";
 
 const personRef = { "@id": PERSON.id };
 const eliteCreatif = COMPANIES.find((c) => c.slug === "elite-creatif")!;
-const osynra = COMPANIES.find((c) => c.slug === "osynra")!;
-const gabal = COMPANIES.find((c) => c.slug === "gabal-travel")!;
-const omni = COMPANIES.find((c) => c.slug === "omni-insight")!;
+
+const locality = {
+  "@type": "PostalAddress",
+  addressLocality: PERSON.address.locality,
+  addressRegion: PERSON.address.region,
+  addressCountry: PERSON.address.country,
+};
 
 function personNode() {
   return {
@@ -16,6 +20,7 @@ function personNode() {
     familyName: PERSON.familyName,
     url: `${SITE.url}/`,
     mainEntityOfPage: `${SITE.url}/about`,
+    email: `mailto:${PERSON.email}`,
     image: {
       "@type": "ImageObject",
       url: `${SITE.url}${PERSON.headshot.path}`,
@@ -26,67 +31,40 @@ function personNode() {
     jobTitle: PERSON.jobTitle,
     description: PERSON.description,
     disambiguatingDescription: PERSON.disambiguatingDescription,
-    worksFor: { "@id": eliteCreatif.schemaId },
-    founder: COMPANIES.map((c) => ({ "@id": c.schemaId })),
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: PERSON.address.locality,
-      addressRegion: PERSON.address.region,
-      addressCountry: PERSON.address.country,
+    worksFor: {
+      "@type": "Organization",
+      "@id": eliteCreatif.schemaId,
+      name: eliteCreatif.name,
+      url: eliteCreatif.website,
     },
+    address: locality,
     knowsAbout: [...PERSON.knowsAbout],
     knowsLanguage: ["English"],
-    nationality: {
-      "@type": "Country",
-      name: "United States",
-    },
-    sameAs: [
-      ...PERSON.socials.map((s) => s.url),
-      "https://elitecreatif.com/about",
-    ],
+    sameAs: PERSON.socials.map((s) => s.url),
   };
 }
 
-function eliteCreatifNode() {
-  return {
-    "@type": "Organization",
-    "@id": eliteCreatif.schemaId,
-    name: eliteCreatif.name,
-    legalName: eliteCreatif.legalName,
-    url: eliteCreatif.url,
-    logo: "https://elitecreatif.com/logo.png",
-    founder: personRef,
-    foundingDate: "2018",
-    foundingLocation: {
-      "@type": "Place",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: PERSON.address.locality,
-        addressRegion: PERSON.address.region,
-        addressCountry: PERSON.address.country,
-      },
-    },
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: PERSON.address.street,
-      addressLocality: PERSON.address.city,
-      addressRegion: PERSON.address.region,
-      postalCode: PERSON.address.postalCode,
-      addressCountry: PERSON.address.country,
-    },
-    areaServed: "United States",
-    industry: eliteCreatif.industry,
-  };
-}
-
-function otherOrgNode(c: typeof COMPANIES[number]) {
+export function orgNode(c: Company) {
+  const parent = c.parent && COMPANIES.find((p) => p.slug === c.parent);
   return {
     "@type": "Organization",
     "@id": c.schemaId,
     name: c.name,
-    url: c.url,
-    founder: personRef,
-    industry: c.industry,
+    url: c.website ?? `${SITE.url}/companies/${c.slug}`,
+    description: c.short,
+    // Founder for founder/co-founder roles; partners are listed as members.
+    ...(c.role === "Partner"
+      ? {
+          member: {
+            "@type": "OrganizationRole",
+            roleName: "Partner",
+            member: personRef,
+          },
+        }
+      : { founder: personRef }),
+    ...(c.founded ? { foundingDate: c.founded } : {}),
+    ...(c.location ? { address: locality } : {}),
+    ...(parent ? { parentOrganization: { "@id": parent.schemaId } } : {}),
   };
 }
 
@@ -97,7 +75,7 @@ function webSiteNode() {
     url: SITE.url,
     name: SITE.name,
     description:
-      "Personal site of Arsany Ibrahim, marketing strategist and founder of Elite Créatif.",
+      "Personal site of Arsany Ibrahim, strategist and operator, founder of Elite Créatif.",
     publisher: personRef,
     inLanguage: SITE.locale,
   };
@@ -118,10 +96,7 @@ export function masterGraph() {
     "@context": "https://schema.org",
     "@graph": [
       personNode(),
-      eliteCreatifNode(),
-      otherOrgNode(osynra),
-      otherOrgNode(gabal),
-      otherOrgNode(omni),
+      ...COMPANIES.map(orgNode),
       webSiteNode(),
       profilePageNode(),
     ],

@@ -8,13 +8,10 @@ export function Footer() {
         <div>
           <p className="display text-2xl">Arsany Ibrahim</p>
           <p className="text-sm text-[color:var(--color-muted)] mt-2">
-            Marketing strategist. Founder of Elite Créatif.
+            Strategist and operator. Founder of Elite Créatif.
           </p>
           <address className="not-italic text-sm text-[color:var(--color-muted)] mt-4 leading-relaxed">
-            {PERSON.address.street}
-            <br />
-            {PERSON.address.city}, {PERSON.address.region}{" "}
-            {PERSON.address.postalCode}
+            Los Angeles, CA
             <br />
             <a
               href={`mailto:${PERSON.email}`}
@@ -25,7 +22,7 @@ export function Footer() {
           </address>
         </div>
         <div className="flex flex-col gap-3 md:items-end">
-          <ul className="flex gap-4 text-sm">
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
             {PERSON.socials.map((s) => (
               <li key={s.name}>
                 <a

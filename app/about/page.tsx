@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { FadeIn } from "@/components/FadeIn";
+import Link from "next/link";
 import { COMPANIES, PERSON, TIMELINE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Arsany Ibrahim is a Los Angeles marketing strategist and founder of Elite Créatif. He has overseen more than $20M in managed ad spend and founded four companies.",
+    "Arsany Ibrahim is a Los Angeles strategist and operator. Founder of Elite Créatif, with more than $20M in managed ad spend, and owner or co-owner of companies in telehealth, ecommerce, travel, production and software.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About — Arsany Ibrahim",
+    title: "About | Arsany Ibrahim",
     description:
-      "Marketing strategist, founder of Elite Créatif, and founder of Osynra, Gabal Travel, and Omni-Insight.",
+      "Strategist and operator. Founder of Elite Créatif. Co-founder of Toned.health and Z Visuals. Partner in The Shoe Rack and Gabal Travel Agency.",
     type: "profile",
     url: "/about",
   },
@@ -85,7 +86,7 @@ export default function AboutPage() {
                 id="companies-heading"
                 className="display text-3xl tracking-tight"
               >
-                Companies founded
+                Companies
               </h2>
               <ul className="mt-8 space-y-4">
                 {COMPANIES.map((c) => (
@@ -94,19 +95,19 @@ export default function AboutPage() {
                     className="flex items-baseline justify-between gap-6 py-3 border-b border-[color:var(--color-border)]"
                   >
                     <div>
-                      <p className="display text-xl">{c.name}</p>
+                      <Link
+                        href={`/companies/${c.slug}`}
+                        className="display text-xl hover:text-[color:var(--color-accent)] transition-colors"
+                      >
+                        {c.name}
+                      </Link>
                       <p className="text-sm text-[color:var(--color-muted)] mt-1">
                         {c.short}
                       </p>
                     </div>
-                    <a
-                      href={c.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[color:var(--color-muted)] hover:text-[color:var(--color-accent)] whitespace-nowrap"
-                    >
-                      {c.domain} ↗
-                    </a>
+                    <span className="text-xs text-[color:var(--color-muted)] whitespace-nowrap">
+                      {c.role}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -121,7 +122,7 @@ export default function AboutPage() {
               >
                 Find me elsewhere
               </h2>
-              <ul className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <ul className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {PERSON.socials.map((s) => (
                   <li key={s.name}>
                     <a

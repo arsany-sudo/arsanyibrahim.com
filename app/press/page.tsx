@@ -7,11 +7,11 @@ import { PERSON, PRESS_KIT } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Press kit",
   description:
-    "Press kit for Arsany Ibrahim — headshots in three sizes, three bio lengths, and a press inquiry contact.",
+    "Press kit for Arsany Ibrahim, strategist and operator: headshots in three sizes, three bio lengths, social links and a press contact.",
   alternates: { canonical: "/press" },
   openGraph: {
-    title: "Press kit — Arsany Ibrahim",
-    description: "Headshots, bios, and press contact for Arsany Ibrahim.",
+    title: "Press kit | Arsany Ibrahim",
+    description: "Headshots, bios, social links and press contact for Arsany Ibrahim.",
     url: "/press",
     type: "website",
   },
@@ -125,7 +125,7 @@ export default function PressPage() {
             >
               Press inquiries
             </h2>
-            <dl className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+            <dl className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
               <div>
                 <dt className="eyebrow mb-1">Email</dt>
                 <dd>
@@ -138,14 +138,29 @@ export default function PressPage() {
                 </dd>
               </div>
               <div>
-                <dt className="eyebrow mb-1">Phone</dt>
+                <dt className="eyebrow mb-1">Location</dt>
+                <dd className="text-base">Los Angeles, CA</dd>
+              </div>
+              <div>
+                <dt className="eyebrow mb-1">Social</dt>
                 <dd>
-                  <a
-                    href={`tel:${PERSON.phoneRaw}`}
-                    className="text-base text-[color:var(--color-text)] hover:text-[color:var(--color-accent)] transition-colors"
-                  >
-                    {PERSON.phone}
-                  </a>
+                  <ul className="space-y-1">
+                    {PERSON.socials.map((s) => (
+                      <li key={s.name}>
+                        <a
+                          href={s.url}
+                          target="_blank"
+                          rel="me noopener noreferrer"
+                          className="text-base text-[color:var(--color-text)] hover:text-[color:var(--color-accent)] transition-colors"
+                        >
+                          {s.name}{" "}
+                          <span className="text-[color:var(--color-muted)]">
+                            {s.handle}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </dd>
               </div>
             </dl>

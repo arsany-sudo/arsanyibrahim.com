@@ -1,15 +1,15 @@
 export const SITE = {
   url: "https://arsanyibrahim.com",
   name: "Arsany Ibrahim",
-  title: "Arsany Ibrahim — Marketing Strategist & Founder of Elite Créatif",
+  title: "Arsany Ibrahim | Strategist and Operator",
   description:
-    "Arsany Ibrahim is a Los Angeles marketing strategist and founder of Elite Créatif, a paid media and communications agency managing over $20M in ad spend.",
+    "Arsany Ibrahim is a Los Angeles strategist and operator building a portfolio of companies, starting with Elite Créatif, a paid media agency with more than $20M in managed ad spend.",
   ogDescription:
-    "Los Angeles marketing strategist. Founder of Elite Créatif. Managing $20M+ in paid media for brands across pharma, CPG, hospitality, and tech.",
+    "Los Angeles strategist and operator. Founder of Elite Créatif. Owner and co-owner of companies in telehealth, ecommerce, travel, production and software.",
   twitterDescription:
-    "Los Angeles marketing strategist. $20M+ in managed ad spend.",
+    "Los Angeles strategist and operator building a portfolio of companies, starting with Elite Créatif.",
   ogImage: "/og-image.jpg",
-  twitterHandle: "@ArsanyIbr",
+  twitterHandle: "@arsanyandco",
   locale: "en-US",
   verification: {
     google: "REPLACE_AFTER_LAUNCH",
@@ -22,38 +22,38 @@ export const PERSON = {
   fullName: "Arsany Ibrahim",
   givenName: "Arsany",
   familyName: "Ibrahim",
-  alternateName: "Arsany",
-  jobTitle: "Marketing Strategist & Founder",
-  formalTitle: "CEO and Principal Strategist, Elite Créatif",
+  alternateName: "arsanyandco",
+  jobTitle: "Strategist and Operator",
+  formalTitle: "Strategist and operator. Founder of Elite Créatif.",
   disambiguatingDescription:
-    "Founder and CEO of Elite Créatif, a Los Angeles digital marketing agency",
+    "Los Angeles strategist and operator, founder of the paid media agency Elite Créatif",
   description:
-    "Arsany Ibrahim is a Los Angeles marketing strategist and founder of Elite Créatif, a paid media and communications agency managing over $20M in ad spend.",
+    "Arsany Ibrahim is a Los Angeles strategist and operator building a portfolio of companies, starting with Elite Créatif.",
   oneLiner:
-    "Arsany Ibrahim is a Los Angeles marketing strategist and founder of Elite Créatif, a paid media and communications agency managing over $20M in ad spend for brands across pharma, CPG, hospitality, and tech.",
+    "Arsany Ibrahim is a Los Angeles strategist and operator building a portfolio of companies, starting with Elite Créatif.",
+  // First person, used on the home page.
+  intro:
+    "I'm Arsany. I build and run companies I own. Marketing is the engine: I founded Elite Créatif in 2018, and the agency has managed more than $20 million in ad spend across Google, Meta, TikTok, Snapchat and LinkedIn. Next to it sit companies I own or co-own in telehealth, ecommerce, travel, production and software.",
+  // Third person, used in the press kit (about 50 words).
   shortBio:
-    "I'm Arsany. I'm a marketing strategist and the founder of Elite Créatif, a full-service paid advertising and communications agency in Los Angeles. We've managed over $20M in ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn. When I'm not running the agency, I'm building software in telehealth, travel, and marketing analytics.",
+    "Arsany Ibrahim is a Los Angeles strategist and operator. He founded Elite Créatif in 2018, a paid media and marketing agency that has managed more than $20 million in ad spend. He also owns or co-owns companies in telehealth, ecommerce, travel, production and software, and runs them on AI systems he builds himself.",
+  // Third person, about 150 words.
   longBio: [
-    "Arsany Ibrahim is a Los Angeles based marketing strategist and the founder and CEO of Elite Créatif, a full-service paid advertising and communications agency headquartered in Northridge, California, with a satellite studio in San Jose. Since founding the agency in 2018, Arsany has overseen more than $20 million in managed ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn for brands in healthcare, consumer packaged goods, hospitality, and B2B technology.",
-    "Beyond the agency, Arsany builds software. He's the founder of Osynra, a direct-to-consumer telehealth brand; Gabal Travel Agency, a luxury travel conglomerate; and Omni-Insight, an enterprise marketing analytics platform. He works as a non-technical founder, using AI-assisted development tools to ship production software.",
-    "Arsany's approach to marketing is direct, data-led, and refreshingly free of agency jargon. He writes and speaks about paid media strategy, founder-led brand building, and the new generation of AI-native software companies.",
+    "Arsany Ibrahim is a Los Angeles strategist and operator building a portfolio of companies he owns. Marketing is the engine. The flagship is Elite Créatif, the paid media and marketing agency he founded in 2018, which has managed more than $20 million in ad spend across Google, Meta, TikTok, Snapchat and LinkedIn for clients in healthcare, CPG, hospitality and B2B tech.",
+    "Next to the agency sit Toned.health, a telehealth brand he co-founded; The Shoe Rack, a footwear ecommerce brand he is building with his partner Andrew; Gabal Travel Agency, where he is a partner on the limousine and private transportation side; Z Visuals, a production company he co-founded; and EC Ads, attribution software in development. He runs the portfolio on operating systems he builds with Claude and AI agents.",
+    "Through arsanyandco, he writes about bringing perspective and morality back into business: people over money, and no hustle culture.",
   ],
   email: "arsany@elitecreatif.com",
-  phone: "+1 (818) 661-3478",
-  phoneRaw: "+18186613478",
   address: {
-    street: "9017 Reseda Blvd, Suite 210",
-    city: "Northridge",
-    region: "CA",
-    postalCode: "91324",
-    country: "US",
     locality: "Los Angeles",
+    region: "CA",
+    country: "US",
   },
   headshot: {
-    path: "/arsany-ibrahim-headshot.jpg",
+    path: "/arsany-ibrahim-headshot-1200.jpg",
     width: 1200,
     height: 1200,
-    caption: "Arsany Ibrahim, founder and CEO of Elite Créatif",
+    caption: "Arsany Ibrahim, strategist and operator, founder of Elite Créatif",
   },
   socials: [
     {
@@ -63,14 +63,19 @@ export const PERSON = {
     },
     {
       name: "Instagram",
-      url: "https://www.instagram.com/arsanyib/",
-      handle: "@arsanyib",
+      url: "https://www.instagram.com/arsany.co/",
+      handle: "@arsany.co",
     },
-    { name: "X", url: "https://x.com/ArsanyIbr", handle: "@ArsanyIbr" },
+    { name: "X", url: "https://x.com/arsanyandco", handle: "@arsanyandco" },
     {
-      name: "GitHub",
-      url: "https://github.com/arsany-sudo",
-      handle: "arsany-sudo",
+      name: "YouTube",
+      url: "https://www.youtube.com/@arsanyandco",
+      handle: "@arsanyandco",
+    },
+    {
+      name: "Facebook",
+      url: "https://www.facebook.com/profile.php?id=61594390212536",
+      handle: "Arsany & co.",
     },
   ],
   knowsAbout: [
@@ -80,88 +85,146 @@ export const PERSON = {
     "Meta Ads",
     "TikTok Ads",
     "Performance marketing",
-    "Search engine optimization",
-    "Public relations",
-    "Marketing analytics",
-    "Direct-to-consumer marketing",
-    "Brand strategy",
-    "AI-assisted software development",
+    "Local SEO",
+    "Marketing attribution",
+    "Direct-to-consumer ecommerce",
+    "Telehealth",
+    "AI agents",
+    "Business operations",
   ],
 } as const;
 
 export type CompanySlug =
   | "elite-creatif"
-  | "osynra"
+  | "toned-health"
+  | "the-shoe-rack"
   | "gabal-travel"
-  | "omni-insight";
+  | "z-visuals"
+  | "ec-local"
+  | "ec-ads";
 
-export const COMPANIES: ReadonlyArray<{
+export type Company = {
   slug: CompanySlug;
   name: string;
-  legalName?: string;
-  url: string;
-  domain: string;
+  website?: string;
   short: string;
   long: string[];
   industry: string;
+  role: "Founder" | "Co-founder" | "Partner";
+  status?: string;
   founded?: string;
   location?: string;
+  parent?: CompanySlug;
   schemaId: string;
-}> = [
+};
+
+const pageId = (slug: CompanySlug) =>
+  `${SITE.url}/companies/${slug}#organization`;
+
+export const COMPANIES: ReadonlyArray<Company> = [
   {
     slug: "elite-creatif",
     name: "Elite Créatif",
-    legalName: "Elite Cratif LLC",
-    url: "https://elitecreatif.com",
-    domain: "elitecreatif.com",
+    website: "https://elitecreatif.com",
     short:
-      "Full-service paid advertising and communications agency. Los Angeles. Since 2018.",
+      "Paid media and marketing agency. Full-funnel media buying: landing pages, creative and ads.",
     long: [
-      "Elite Créatif is a full-service paid advertising and communications agency founded in 2018. Headquartered in Northridge, California, with a satellite studio in San Jose, the agency works with brands in pharma, CPG, hospitality, and B2B tech.",
-      "Services span paid media, SEO, PR, social media management, branding, and web development. The team has managed over $20 million in ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn.",
+      "Elite Créatif is a paid media and marketing agency founded by Arsany Ibrahim in Los Angeles in 2018. It is the flagship of his portfolio.",
+      "The agency has managed more than $20 million in ad spend across Google, Meta, TikTok, Snapchat and LinkedIn, for clients in healthcare, CPG, hospitality and B2B tech. The flagship offer is full-funnel media buying: landing pages, creative and ads.",
     ],
     industry: "Marketing and Advertising",
+    role: "Founder",
     founded: "2018",
-    location: "Northridge, California",
+    location: "Los Angeles, California",
     schemaId: "https://elitecreatif.com/#organization",
   },
   {
-    slug: "omni-insight",
-    name: "Omni-Insight",
-    url: "https://omniinsight.com",
-    domain: "omniinsight.com",
-    short: "Enterprise marketing analytics platform.",
+    slug: "toned-health",
+    name: "Toned.health",
+    website: "https://toned.health",
+    short: "Direct-to-consumer telehealth brand for compounded GLP-1 weight loss.",
     long: [
-      "Omni-Insight is an enterprise marketing analytics platform built to consolidate paid, owned, and earned media performance into a single source of truth for marketing teams.",
-    ],
-    industry: "Marketing Analytics Software",
-    schemaId: "https://omniinsight.com/#organization",
-  },
-  {
-    slug: "osynra",
-    name: "Osynra",
-    url: "https://osynra.com",
-    domain: "osynra.com",
-    short: "Direct-to-consumer telehealth brand.",
-    long: [
-      "Osynra is a direct-to-consumer telehealth brand connecting patients to licensed providers for accessible, prescription-grade care.",
+      "Toned.health is a direct-to-consumer telehealth brand offering compounded GLP-1 weight loss. The site is live and LegitScript certified.",
+      "Arsany co-founded Toned.health and co-owns it with a partner.",
     ],
     industry: "Telehealth",
-    schemaId: "https://osynra.com/#organization",
+    role: "Co-founder",
+    status: "Live",
+    schemaId: "https://toned.health/#organization",
+  },
+  {
+    slug: "the-shoe-rack",
+    name: "The Shoe Rack",
+    short: "Footwear ecommerce brand built to compete with the big shoe marketplaces.",
+    long: [
+      "The Shoe Rack is a footwear ecommerce brand built to compete with the big shoe marketplaces. Arsany co-owns it with his partner Andrew, an established Amazon footwear seller.",
+      "Arsany builds the software: the site, the back end, the catalog, and marketplace sync to eBay and Walmart, with Amazon next.",
+    ],
+    industry: "Ecommerce",
+    role: "Partner",
+    status: "Building",
+    schemaId: pageId("the-shoe-rack"),
   },
   {
     slug: "gabal-travel",
     name: "Gabal Travel Agency",
-    url: "https://gabaltravel.com",
-    domain: "gabaltravel.com",
-    short: "Luxury travel conglomerate.",
+    short: "Limousine and private transportation. Luxury with convenience.",
     long: [
-      "Gabal Travel Agency is a luxury travel conglomerate curating bespoke itineraries and private travel experiences for discerning clients.",
+      "Gabal Travel Agency is a travel company. Its current focus is limousine and private transportation, built on one idea: luxury and convenience in the same ride.",
+      "Arsany is a partner and co-owner.",
     ],
-    industry: "Travel",
-    schemaId: "https://gabaltravel.com/#organization",
+    industry: "Travel and Private Transportation",
+    role: "Partner",
+    schemaId: pageId("gabal-travel"),
+  },
+  {
+    slug: "z-visuals",
+    name: "Z Visuals",
+    short:
+      "Photo, video and editing. Content packages for restaurants in LA and Orange County.",
+    long: [
+      "Z Visuals is the production company under Elite Créatif, covering photo, video and editing.",
+      "It sells content packages to restaurants in Los Angeles and Orange County. Arsany co-founded it.",
+    ],
+    industry: "Production",
+    role: "Co-founder",
+    parent: "elite-creatif",
+    schemaId: pageId("z-visuals"),
+  },
+  {
+    slug: "ec-local",
+    name: "EC Local",
+    website: "https://eclocal.com",
+    short:
+      "Elite Créatif's line for local businesses. Three fixed packages: ads, local SEO and content.",
+    long: [
+      "EC Local is Elite Créatif's line for local businesses. It sells three fixed packages: ads, local SEO and content.",
+      "The site has been live at eclocal.com since August 2026.",
+    ],
+    industry: "Marketing and Advertising",
+    role: "Founder",
+    status: "Live since Aug 2026",
+    parent: "elite-creatif",
+    schemaId: "https://eclocal.com/#organization",
+  },
+  {
+    slug: "ec-ads",
+    name: "EC Ads",
+    short: "Marketing attribution and campaign intelligence software.",
+    long: [
+      "EC Ads is marketing analytics software for attribution and campaign intelligence. Arsany is the founder and owner.",
+      "It is in development, with early tests running with a small group of users.",
+    ],
+    industry: "Marketing Analytics Software",
+    role: "Founder",
+    status: "In development",
+    schemaId: pageId("ec-ads"),
   },
 ];
+
+export function companyLink(c: Company): { url: string; label: string } | null {
+  return c.website ? { url: c.website, label: new URL(c.website).host } : null;
+}
 
 export const TIMELINE: ReadonlyArray<{
   year: string;
@@ -171,48 +234,13 @@ export const TIMELINE: ReadonlyArray<{
   { year: "2024", label: "Crossed $10M in managed ad spend" },
   {
     year: "2026",
-    label: "Launched Omni-Insight, Osynra, and Gabal Travel",
-  },
-  { year: "Today", label: "Managing $20M+ across 5 channels" },
-];
-
-export const WORK: ReadonlyArray<{
-  client: string;
-  industry: string;
-  year: string;
-  challenge: string;
-  whatWeDid: string;
-  result: string;
-}> = [
-  {
-    client: "RE Pharmacy",
-    industry: "Specialty Pharmacy",
-    year: "2024",
-    challenge:
-      "Drive qualified patient enrollment for a specialty pharmacy operating in a regulated, low-trust category.",
-    whatWeDid:
-      "Built a paid search and Meta program with creative and landing pages tailored to specific condition cohorts. Layered conversion tracking with HIPAA-conscious tagging.",
-    result: "3x qualified patient inquiries quarter over quarter.",
+    label:
+      "Launched EC Local and Toned.health. Started building The Shoe Rack with partner Andrew.",
   },
   {
-    client: "CocoJojo",
-    industry: "Consumer Packaged Goods",
-    year: "2024",
-    challenge:
-      "Scale a coconut-oil personal-care brand profitably across Amazon and DTC.",
-    whatWeDid:
-      "Restructured Meta and TikTok creative testing around UGC and bundle offers. Rebuilt the DTC funnel with sharper offer pages.",
-    result: "ROAS improved from 1.8 to 3.4 in 90 days.",
-  },
-  {
-    client: "Papa K's Mediterranean Kitchen",
-    industry: "Restaurant",
-    year: "2025",
-    challenge:
-      "Build a steady delivery and dine-in pipeline for a Mediterranean kitchen in a competitive LA market.",
-    whatWeDid:
-      "Launched local Meta and Google campaigns around lunch, family meal, and catering intents. Tightened daypart targeting and creative around peak hours.",
-    result: "Online orders up 142% year over year.",
+    year: "Now",
+    label:
+      "More than $20M managed across five channels. Building a portfolio of owned companies.",
   },
 ];
 
@@ -222,27 +250,27 @@ export const FAQ: ReadonlyArray<{
 }> = [
   {
     q: "Who is Arsany Ibrahim?",
-    a: "Arsany Ibrahim is a marketing strategist and the founder and CEO of Elite Créatif, a Los Angeles paid advertising and communications agency. He has managed over $20 million in ad spend for brands across pharmaceutical, consumer packaged goods, hospitality, and technology sectors since founding the agency in 2018.",
+    a: "Arsany Ibrahim is a Los Angeles strategist and operator building a portfolio of companies, starting with Elite Créatif, the paid media and marketing agency he founded in 2018. The agency has managed more than $20 million in ad spend.",
   },
   {
     q: "What is Elite Créatif?",
-    a: "Elite Créatif is a full-service paid advertising and communications agency founded by Arsany Ibrahim in 2018. Headquartered in Northridge, California, with a satellite studio in San Jose, the agency offers paid media, SEO, PR, social media management, branding, and web development.",
+    a: "Elite Créatif is a Los Angeles paid media and marketing agency founded by Arsany Ibrahim in 2018. Its flagship offer is full-funnel media buying: landing pages, creative and ads, across Google, Meta, TikTok, Snapchat and LinkedIn.",
   },
   {
-    q: "What companies has Arsany Ibrahim founded?",
-    a: "Arsany Ibrahim is the founder of four companies: Elite Créatif (digital marketing agency), Osynra (direct-to-consumer telehealth), Gabal Travel Agency (luxury travel conglomerate), and Omni-Insight (enterprise marketing analytics platform).",
+    q: "What companies does Arsany Ibrahim own?",
+    a: "Arsany Ibrahim founded Elite Créatif, along with its EC Local line and EC Ads, attribution software in development. He co-founded Toned.health and Z Visuals, and is a partner in The Shoe Rack and Gabal Travel Agency.",
   },
   {
     q: "Where is Arsany Ibrahim based?",
-    a: "Arsany Ibrahim is based in Los Angeles, California. Elite Créatif is headquartered in Northridge with a satellite studio in San Jose.",
+    a: "Arsany Ibrahim is based in Los Angeles, California.",
   },
   {
-    q: "What industries does Arsany Ibrahim work with?",
-    a: "Arsany Ibrahim and Elite Créatif work with brands in pharmaceutical and healthcare, consumer packaged goods, hospitality, restaurants, and B2B technology sectors.",
+    q: "What industries does Elite Créatif work with?",
+    a: "Elite Créatif works with clients in healthcare, consumer packaged goods, hospitality and B2B tech.",
   },
   {
     q: "How do I contact Arsany Ibrahim?",
-    a: "You can reach Arsany Ibrahim through Elite Créatif at arsany@elitecreatif.com or by phone at +1 (818) 661-3478. The agency office is located at 9017 Reseda Blvd, Suite 210, Northridge, CA 91324.",
+    a: "Email arsany@elitecreatif.com, or use the contact form on this site.",
   },
 ];
 

@@ -35,6 +35,17 @@ const nextConfig: NextConfig = {
         destination: "/#companies",
         permanent: true,
       },
+      // Retired company names. 301 (not Next's default 308) as requested.
+      {
+        source: "/companies/osynra",
+        destination: "/companies/toned-health",
+        statusCode: 301,
+      },
+      {
+        source: "/companies/omni-insight",
+        destination: "/companies/ec-ads",
+        statusCode: 301,
+      },
     ];
   },
 };

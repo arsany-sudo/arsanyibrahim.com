@@ -1,4 +1,4 @@
-import { COMPANIES, FAQ, PERSON, POSTS, SITE } from "./site";
+import { COMPANIES, FAQ, PERSON, POSTS, SITE, companyLink } from "./site";
 
 function abs(path: string): string {
   return `${SITE.url}${path}`;
@@ -12,25 +12,25 @@ export function buildLlmsTxt(): string {
   lines.push(`> ${PERSON.oneLiner}`);
   lines.push("");
   lines.push(
-    `${PERSON.fullName} is the founder of ${COMPANIES.map((c) => c.name).join(", ")}. He is based in ${PERSON.address.locality}, ${PERSON.address.region}, and writes about paid media, founder-led brand building, and AI-native software.`,
+    `Companies and roles: ${COMPANIES.map((c) => `${c.name} (${c.role})`).join(", ")}. He is based in ${PERSON.address.locality}, ${PERSON.address.region}.`,
   );
   lines.push("");
   lines.push("## Key pages");
   lines.push("");
-  lines.push(`- [Home](${abs("/")}): Hero, About, Companies, Selected Work, Writing, Press, FAQ, Contact.`);
+  lines.push(`- [Home](${abs("/")}): Hero, About, Companies, Writing, Press, FAQ, Contact.`);
   lines.push(
-    `- [About](${abs("/about")}): Canonical biography, career timeline, list of companies founded, social profiles.`,
+    `- [About](${abs("/about")}): Canonical biography, timeline, companies and roles, social profiles.`,
   );
   lines.push(
-    `- [Press kit](${abs("/press")}): Downloadable headshots in three sizes, three bio lengths, press contact.`,
+    `- [Press kit](${abs("/press")}): Downloadable headshots in three sizes, three bio lengths, social links, press contact.`,
   );
-  lines.push(`- [Contact](${abs("/contact")}): Email, phone, office address, and message form.`);
+  lines.push(`- [Contact](${abs("/contact")}): Email and message form.`);
   lines.push("");
   lines.push("## Companies");
   lines.push("");
   for (const c of COMPANIES) {
     lines.push(
-      `- [${c.name}](${abs(`/companies/${c.slug}`)}): ${c.short} Industry: ${c.industry}.${c.founded ? ` Founded ${c.founded}.` : ""} Website: ${c.url}.`,
+      `- [${c.name}](${abs(`/companies/${c.slug}`)}): ${c.short} Role: ${c.role}.${c.status ? ` Status: ${c.status}.` : ""}${c.founded ? ` Founded ${c.founded}.` : ""}${c.website ? ` Website: ${c.website}.` : ""}`,
     );
   }
   lines.push("");
@@ -69,10 +69,7 @@ export function buildLlmsFullTxt(): string {
   lines.push(`Canonical site: ${SITE.url}`);
   lines.push(`Canonical biography page: ${abs("/about")}`);
   lines.push(`Email: ${PERSON.email}`);
-  lines.push(`Phone: ${PERSON.phone}`);
-  lines.push(
-    `Office: ${PERSON.address.street}, ${PERSON.address.city}, ${PERSON.address.region} ${PERSON.address.postalCode}, ${PERSON.address.country}`,
-  );
+  lines.push(`Location: ${PERSON.address.locality}, ${PERSON.address.region}`);
   lines.push("");
   lines.push("## About");
   lines.push("");
@@ -93,16 +90,18 @@ export function buildLlmsFullTxt(): string {
   }
   lines.push("");
 
-  lines.push("## Companies founded");
+  lines.push("## Companies");
   lines.push("");
   for (const c of COMPANIES) {
     lines.push(`### ${c.name}`);
     lines.push("");
-    lines.push(`- Website: ${c.url}`);
+    lines.push(`- Role: ${c.role}`);
+    if (c.status) lines.push(`- Status: ${c.status}`);
+    const link = companyLink(c);
+    if (link) lines.push(`- Website: ${link.url}`);
     lines.push(`- Industry: ${c.industry}`);
     if (c.founded) lines.push(`- Founded: ${c.founded}`);
     if (c.location) lines.push(`- Location: ${c.location}`);
-    if (c.legalName) lines.push(`- Legal entity: ${c.legalName}`);
     lines.push(`- Detail page: ${abs(`/companies/${c.slug}`)}`);
     lines.push("");
     for (const para of c.long) {

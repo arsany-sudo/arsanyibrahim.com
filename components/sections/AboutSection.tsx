@@ -32,11 +32,11 @@ export function AboutSection() {
             A short version.
           </h2>
           <p className="mt-8 text-lg leading-relaxed text-[color:var(--color-text)]/90">
-            {PERSON.shortBio}
+            {PERSON.intro}
           </p>
           <p className="mt-6 text-base leading-relaxed text-[color:var(--color-muted)]">
-            For the long version, including the timeline and the four companies
-            I&apos;ve founded,{" "}
+            For the long version, including the timeline and every company in
+            the portfolio,{" "}
             <Link
               href="/about"
               className="text-[color:var(--color-text)] underline decoration-[color:var(--color-accent)] underline-offset-4 hover:text-[color:var(--color-accent)] transition-colors"

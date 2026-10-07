@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Essays and notes from Arsany Ibrahim on paid media strategy, founder-led brand building, and AI-native software.",
   alternates: { canonical: "/writing" },
   openGraph: {
-    title: "Writing — Arsany Ibrahim",
+    title: "Writing | Arsany Ibrahim",
     description:
       "Essays on paid media, founder-led brands, and AI-native software.",
     url: "/writing",

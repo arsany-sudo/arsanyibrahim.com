@@ -36,30 +36,14 @@ export function ContactSection() {
               </dd>
             </div>
             <div>
-              <dt className="eyebrow mb-1">Phone</dt>
-              <dd>
-                <a
-                  href={`tel:${PERSON.phoneRaw}`}
-                  className="text-base text-[color:var(--color-text)] hover:text-[color:var(--color-accent)] transition-colors"
-                >
-                  {PERSON.phone}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt className="eyebrow mb-1">Office</dt>
-              <dd>
-                <address className="not-italic text-base leading-relaxed text-[color:var(--color-text)]/90">
-                  {PERSON.address.street}
-                  <br />
-                  {PERSON.address.city}, {PERSON.address.region}{" "}
-                  {PERSON.address.postalCode}
-                </address>
+              <dt className="eyebrow mb-1">Location</dt>
+              <dd className="text-base text-[color:var(--color-text)]/90">
+                Los Angeles, CA
               </dd>
             </div>
           </dl>
 
-          <ul className="mt-10 flex gap-5 text-sm">
+          <ul className="mt-10 flex flex-wrap gap-x-5 gap-y-2 text-sm">
             {PERSON.socials.map((s) => (
               <li key={s.name}>
                 <a

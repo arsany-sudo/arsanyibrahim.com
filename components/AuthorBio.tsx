@@ -32,11 +32,11 @@ export function AuthorBio() {
           </Link>
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[color:var(--color-text)]/85 max-w-xl">
-          Marketing strategist and founder of Elite Créatif, a Los Angeles paid
-          media and communications agency. Founder of Osynra, Gabal Travel, and
-          Omni-Insight.
+          Strategist and operator. Founder of Elite Créatif, a Los Angeles paid
+          media and marketing agency, and owner or co-owner of companies in
+          telehealth, ecommerce, travel, production and software.
         </p>
-        <ul className="mt-4 flex gap-4 text-xs">
+        <ul className="mt-4 flex flex-wrap gap-4 text-xs">
           {PERSON.socials.map((s) => (
             <li key={s.name}>
               <a

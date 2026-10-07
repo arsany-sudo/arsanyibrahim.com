@@ -16,12 +16,13 @@ export function Hero() {
               Arsany Ibrahim
             </h1>
             <p className="display text-2xl lg:text-3xl mt-6 text-[color:var(--color-muted)]">
-              Marketing Strategist. Founder of Elite Créatif.
+              Strategist and operator. Founder of Elite Créatif.
             </p>
             <p className="mt-8 text-lg leading-relaxed max-w-2xl text-[color:var(--color-text)]/90">
-              I help brands grow through paid media, content, and PR. Currently
-              running a Los Angeles agency managing $20M+ in ad spend, and
-              shipping software in telehealth, travel, and marketing analytics.
+              I build and run companies I own. Marketing is the engine: Elite
+              Créatif has managed more than $20M in ad spend since 2018. Next
+              to it sit companies in telehealth, ecommerce, travel, production
+              and software.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
@@ -31,10 +32,10 @@ export function Hero() {
                 Work with me
               </Link>
               <Link
-                href="#work"
+                href="#companies"
                 className="inline-flex items-center justify-center border border-[color:var(--color-border)] px-6 py-3 text-sm hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)] transition-colors"
               >
-                See the work
+                See the companies
               </Link>
             </div>
           </FadeIn>
@@ -45,7 +46,7 @@ export function Hero() {
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-[color:var(--color-surface)] border border-[color:var(--color-border)]">
               <Image
                 src="/arsany-hero-portrait.png"
-                alt="Portrait of Arsany Ibrahim, marketing strategist and founder of Elite Créatif"
+                alt="Portrait of Arsany Ibrahim, strategist, operator and founder of Elite Créatif"
                 fill
                 priority
                 sizes="(min-width: 1024px) 40vw, 100vw"
