@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About — Arsany Ibrahim",
     description:
-      "Marketing strategist, founder of Elite Créatif, and founder of Osynra, Gabal Travel, and Omni-Insight.",
+      "Marketing strategist, founder of Elite Créatif, and co-founder of Toned.health, and founder of Gabal Travel and Omni-Insight.",
     type: "profile",
     url: "/about",
   },

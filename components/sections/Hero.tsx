@@ -8,7 +8,7 @@ export function Hero() {
       <div className="container-content grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
         <div className="lg:col-span-7 order-2 lg:order-1">
           <FadeIn>
-            <p className="eyebrow mb-6">Los Angeles · Since 2018</p>
+            <p className="eyebrow mb-6">Los Angeles · Since 2021</p>
             <h1
               id="hero-heading"
               className="hero-h1 text-[color:var(--color-text)]"

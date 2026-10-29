@@ -34,8 +34,8 @@ export const PERSON = {
   shortBio:
     "I'm Arsany. I'm a marketing strategist and the founder of Elite Créatif, a full-service paid advertising and communications agency in Los Angeles. We've managed over $20M in ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn. When I'm not running the agency, I'm building software in telehealth, travel, and marketing analytics.",
   longBio: [
-    "Arsany Ibrahim is a Los Angeles based marketing strategist and the founder and CEO of Elite Créatif, a full-service paid advertising and communications agency headquartered in Los Angeles, California. Since founding the agency in 2018, Arsany has overseen more than $20 million in managed ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn for brands in healthcare, consumer packaged goods, hospitality, and B2B technology.",
-    "Beyond the agency, Arsany builds software. He's the founder of Osynra, a direct-to-consumer telehealth brand; Gabal Travel Agency, a luxury travel conglomerate; and Omni-Insight, an enterprise marketing analytics platform. He works as a non-technical founder, using AI-assisted development tools to ship production software.",
+    "Arsany Ibrahim is a Los Angeles based marketing strategist and the founder and CEO of Elite Créatif, a full-service paid advertising and communications agency headquartered in Los Angeles, California. Since founding the agency in 2021, Arsany has overseen more than $20 million in managed ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn for brands in healthcare, consumer packaged goods, hospitality, and B2B technology.",
+    "Beyond the agency, Arsany builds software. He's the co-founder of Toned.health, a direct-to-consumer telehealth brand; Gabal Travel Agency, a luxury travel conglomerate; and Omni-Insight, an enterprise marketing analytics platform. He works as a non-technical founder, using AI-assisted development tools to ship production software.",
     "Arsany's approach to marketing is direct, data-led, and refreshingly free of agency jargon. He writes and speaks about paid media strategy, founder-led brand building, and the new generation of AI-native software companies.",
   ],
   email: "arsany@elitecreatif.com",
@@ -91,7 +91,7 @@ export const PERSON = {
 
 export type CompanySlug =
   | "elite-creatif"
-  | "osynra"
+  | "toned-health"
   | "gabal-travel"
   | "omni-insight";
 
@@ -115,13 +115,13 @@ export const COMPANIES: ReadonlyArray<{
     url: "https://elitecreatif.com",
     domain: "elitecreatif.com",
     short:
-      "Full-service paid advertising and communications agency. Los Angeles. Since 2018.",
+      "Full-service paid advertising and communications agency. Los Angeles. Since 2021.",
     long: [
-      "Elite Créatif is a full-service paid advertising and communications agency founded in 2018. Headquartered in Los Angeles, California, the agency works with brands in pharma, CPG, hospitality, and B2B tech.",
+      "Elite Créatif is a full-service paid advertising and communications agency founded in 2021. Headquartered in Los Angeles, California, the agency works with brands in pharma, CPG, hospitality, and B2B tech.",
       "Services span paid media, SEO, PR, social media management, branding, and web development. The team has managed over $20 million in ad spend across Google, Meta, TikTok, Snapchat, and LinkedIn.",
     ],
     industry: "Marketing and Advertising",
-    founded: "2018",
+    founded: "2021",
     location: "Los Angeles, California",
     schemaId: "https://elitecreatif.com/#organization",
   },
@@ -138,16 +138,16 @@ export const COMPANIES: ReadonlyArray<{
     schemaId: "https://omniinsight.com/#organization",
   },
   {
-    slug: "osynra",
-    name: "Osynra",
-    url: "https://osynra.com",
-    domain: "osynra.com",
+    slug: "toned-health",
+    name: "Toned.health",
+    url: "https://toned.health",
+    domain: "toned.health",
     short: "Direct-to-consumer telehealth brand.",
     long: [
-      "Osynra is a direct-to-consumer telehealth brand connecting patients to licensed providers for accessible, prescription-grade care.",
+      "Toned.health is a direct-to-consumer telehealth brand offering online weight-loss care through independently licensed providers.",
     ],
     industry: "Telehealth",
-    schemaId: "https://osynra.com/#organization",
+    schemaId: "https://toned.health/#organization",
   },
   {
     slug: "gabal-travel",
@@ -167,11 +167,11 @@ export const TIMELINE: ReadonlyArray<{
   year: string;
   label: string;
 }> = [
-  { year: "2018", label: "Founded Elite Créatif" },
+  { year: "2021", label: "Founded Elite Créatif" },
   { year: "2024", label: "Crossed $10M in managed ad spend" },
   {
     year: "2026",
-    label: "Launched Omni-Insight, Osynra, and Gabal Travel",
+    label: "Launched Omni-Insight, Toned.health, and Gabal Travel",
   },
   { year: "Today", label: "Managing $20M+ across 5 channels" },
 ];
@@ -222,15 +222,15 @@ export const FAQ: ReadonlyArray<{
 }> = [
   {
     q: "Who is Arsany Ibrahim?",
-    a: "Arsany Ibrahim is a marketing strategist and the founder and CEO of Elite Créatif, a Los Angeles paid advertising and communications agency. He has managed over $20 million in ad spend for brands across pharmaceutical, consumer packaged goods, hospitality, and technology sectors since founding the agency in 2018.",
+    a: "Arsany Ibrahim is a marketing strategist and the founder and CEO of Elite Créatif, a Los Angeles paid advertising and communications agency. He has managed over $20 million in ad spend for brands across pharmaceutical, consumer packaged goods, hospitality, and technology sectors since founding the agency in 2021.",
   },
   {
     q: "What is Elite Créatif?",
-    a: "Elite Créatif is a full-service paid advertising and communications agency founded by Arsany Ibrahim in 2018. Headquartered in Los Angeles, California, the agency offers paid media, SEO, PR, social media management, branding, and web development.",
+    a: "Elite Créatif is a full-service paid advertising and communications agency founded by Arsany Ibrahim in 2021. Headquartered in Los Angeles, California, the agency offers paid media, SEO, PR, social media management, branding, and web development.",
   },
   {
     q: "What companies has Arsany Ibrahim founded?",
-    a: "Arsany Ibrahim is the founder of four companies: Elite Créatif (digital marketing agency), Osynra (direct-to-consumer telehealth), Gabal Travel Agency (luxury travel conglomerate), and Omni-Insight (enterprise marketing analytics platform).",
+    a: "Arsany Ibrahim has founded or co-founded four companies: Elite Créatif (digital marketing agency), Toned.health (direct-to-consumer telehealth), Gabal Travel Agency (luxury travel conglomerate), and Omni-Insight (enterprise marketing analytics platform).",
   },
   {
     q: "Where is Arsany Ibrahim based?",

@@ -33,7 +33,7 @@ export function AuthorBio() {
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[color:var(--color-text)]/85 max-w-xl">
           Marketing strategist and founder of Elite Créatif, a Los Angeles paid
-          media and communications agency. Founder of Osynra, Gabal Travel, and
+          media and communications agency. Co-founder of Toned.health; founder of Gabal Travel and
           Omni-Insight.
         </p>
         <ul className="mt-4 flex gap-4 text-xs">

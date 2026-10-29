@@ -2,7 +2,7 @@ import { COMPANIES, FAQ, PERSON, POSTS, SITE } from "./site";
 
 const personRef = { "@id": PERSON.id };
 const eliteCreatif = COMPANIES.find((c) => c.slug === "elite-creatif")!;
-const osynra = COMPANIES.find((c) => c.slug === "osynra")!;
+const toned = COMPANIES.find((c) => c.slug === "toned-health")!;
 const gabal = COMPANIES.find((c) => c.slug === "gabal-travel")!;
 const omni = COMPANIES.find((c) => c.slug === "omni-insight")!;
 
@@ -56,7 +56,7 @@ function eliteCreatifNode() {
     url: eliteCreatif.url,
     logo: "https://elitecreatif.com/logo.png",
     founder: personRef,
-    foundingDate: "2018",
+    foundingDate: "2021",
     foundingLocation: {
       "@type": "Place",
       address: {
@@ -119,7 +119,7 @@ export function masterGraph() {
     "@graph": [
       personNode(),
       eliteCreatifNode(),
-      otherOrgNode(osynra),
+      otherOrgNode(toned),
       otherOrgNode(gabal),
       otherOrgNode(omni),
       webSiteNode(),
