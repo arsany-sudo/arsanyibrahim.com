@@ -87,6 +87,7 @@ function otherOrgNode(c: typeof COMPANIES[number]) {
     name: c.name,
     url: c.url,
     founder: personRef,
+    // knowsAbout replaces the invalid "industry" property here too.
     knowsAbout: c.industry,
   };
 }
