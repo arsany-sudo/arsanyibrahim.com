@@ -75,6 +75,7 @@ function eliteCreatifNode() {
       addressCountry: PERSON.address.country,
     },
     areaServed: "United States",
+    // schema.org has no "industry" property on Organization; knowsAbout is the valid one.
     knowsAbout: eliteCreatif.industry,
   };
 }
