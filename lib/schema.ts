@@ -75,7 +75,7 @@ function eliteCreatifNode() {
       addressCountry: PERSON.address.country,
     },
     areaServed: "United States",
-    industry: eliteCreatif.industry,
+    knowsAbout: eliteCreatif.industry,
   };
 }
 
@@ -86,7 +86,7 @@ function otherOrgNode(c: typeof COMPANIES[number]) {
     name: c.name,
     url: c.url,
     founder: personRef,
-    industry: c.industry,
+    knowsAbout: c.industry,
   };
 }
 
