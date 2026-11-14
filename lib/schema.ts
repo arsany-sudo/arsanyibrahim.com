@@ -1,3 +1,4 @@
+// Structured data for the whole site. SEO changes reach this file through reviewed pull requests only.
 import { COMPANIES, FAQ, PERSON, POSTS, SITE } from "./site";
 
 const personRef = { "@id": PERSON.id };
