@@ -65,6 +65,9 @@ jobs:
               const maxFiles = rules.maxFiles ?? 40;
               const maxLines = rules.maxChangedLines ?? 400;
               const lines = files.reduce((n, f) => n + f.additions + f.deletions, 0);
+              // Optional: regular expressions (case-insensitive). A pull request that adds or
+              // removes any line matching one of them is held, for example prices or publish flags.
+              const denyPatch = (rules.denyPatch || []).map((p) => new RegExp(p, 'i'));
               if (files.length === 0) reasons.push('no changed files');
               if (files.length > maxFiles) reasons.push(`${files.length} files changed, limit is ${maxFiles}`);
               if (lines > maxLines) reasons.push(`${lines} lines changed, limit is ${maxLines}`);
@@ -74,6 +77,14 @@ jobs:
                   if (hit(name, HARD_DENY)) reasons.push(`\`${name}\` is never auto-merged`);
                   else if (hit(name, rules.deny)) reasons.push(`\`${name}\` is on this repo's deny list`);
                   else if (!hit(name, rules.allow)) reasons.push(`\`${name}\` is outside the allowed paths`);
+                }
+                if (denyPatch.length) {
+                  if (typeof f.patch !== 'string') reasons.push(`\`${f.filename}\` has no line-by-line diff to check (binary or too large)`);
+                  else for (const line of f.patch.split('\n')) {
+                    if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
+                    const bad = denyPatch.find((re) => re.test(line.slice(1)));
+                    if (bad) { reasons.push(`\`${f.filename}\` adds or removes a protected line (rule: ${bad.source})`); break; }
+                  }
                 }
                 if (rules.addOnly === true && f.status !== 'added') reasons.push(`\`${f.filename}\` is ${f.status}; this branch type may only add new files`);
                 if (rules.addOnly !== true && (f.status === 'removed' || f.status === 'renamed')) reasons.push(`\`${f.filename}\` is ${f.status}; deleting or moving files needs a person`);
