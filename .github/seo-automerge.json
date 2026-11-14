@@ -1,0 +1,17 @@
+{
+  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when the Vercel build passes and every changed file matches allow, matches no deny, and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). Set enabled to false to hold every pull request of that kind for a person.",
+  "fix": {
+    "enabled": true,
+    "allow": ["app/**", "components/**", "lib/**", "public/**"],
+    "deny": ["app/contact/**", "components/**/*form*", "components/**/*Form*", "lib/site.ts"],
+    "maxFiles": 40,
+    "maxChangedLines": 400
+  },
+  "blog": {
+    "enabled": false,
+    "allow": [],
+    "addOnly": true,
+    "maxFiles": 12,
+    "maxChangedLines": 3000
+  }
+}
