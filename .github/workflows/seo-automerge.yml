@@ -3,35 +3,44 @@ name: SEO auto-merge
 # Merges agent pull requests from fix/seo-* and blog/* branches once the Vercel
 # build for the pull request passes AND every changed file is inside the rules in
 # .github/seo-automerge.json (read from the default branch, never from the PR).
-# Triggered by the Vercel commit status, so this workflow always runs the copy on
-# the default branch and never checks out or runs pull request code.
+# This workflow never checks out or runs pull request code. Both triggers run the
+# copy of this file on the default branch:
+# - status: the Vercel commit status turns green.
+# - pull_request_target: the pull request is opened, reopened or updated. This
+#   covers the race where Vercel reports success before the pull request exists.
+#   It only reads the commit statuses that are already there and goes on only if
+#   every Vercel status for the head commit is already success.
+# Never change this to plain pull_request: that would run the workflow file from
+# the pull request branch with a write token.
 # Anything outside the rules stays open with a comment that says why.
 
-on: status
+on:
+  status:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
   pull-requests: write
+  statuses: read
 
 concurrency:
-  group: seo-automerge-${{ github.event.sha }}
+  group: seo-automerge-${{ github.event.sha || github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 jobs:
   merge:
-    if: github.event.state == 'success' && startsWith(github.event.context, 'Vercel')
+    if: >-
+      (github.event_name == 'status' && github.event.state == 'success' && startsWith(github.event.context, 'Vercel')) ||
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/github-script@v7
         with:
           script: |
-            const { owner, repo } = context.repo;
-            const sha = context.payload.sha;
-            const base = context.payload.repository.default_branch;
-            const MARK = '<!-- seo-automerge -->';
-
-            // Never auto-merged, whatever the rules file says.
+            // BEGIN RULES LOGIC (pure functions; the test harness extracts and runs this block)
+            // Never auto-merged, whatever the rules file says. Matched without regard to case.
             const HARD_DENY = [
               '.github/**', '.claude/**', '.env*', '**/.env*',
               'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb',
@@ -41,10 +50,134 @@ jobs:
               'supabase/**', 'prisma/**', 'drizzle/**', 'migrations/**', 'scripts/**',
             ];
 
-            const toRe = (glob) => new RegExp('^' + glob.split('**').map(
-              (part) => part.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*')
-            ).join('.*') + '$');
-            const hit = (file, globs) => (globs || []).some((g) => toRe(g).test(file));
+            // Glob to regular expression. "**/" is zero or more folders, "**" anything,
+            // "*" anything inside one folder. Every other character is literal.
+            const toRe = (glob, flags = '') => {
+              let re = '';
+              for (let i = 0; i < glob.length;) {
+                if (glob.startsWith('**/', i)) { re += '(?:.*/)?'; i += 3; }
+                else if (glob.startsWith('**', i)) { re += '.*'; i += 2; }
+                else if (glob[i] === '*') { re += '[^/]*'; i += 1; }
+                else { re += glob[i].replace(/[.+?^${}()|[\]\\]/g, '\\$&'); i += 1; }
+              }
+              return new RegExp('^' + re + '$', flags);
+            };
+            // allow is case-sensitive (narrow); deny, linkOnly and the rest are not (wide).
+            const hit = (file, globs, flags = '') => (globs || []).some((g) => toRe(g, flags).test(file));
+            const hitAnyCase = (file, globs) => hit(file, globs, 'i');
+
+            // linkOnly: a change passes only if it adds internal links and nothing else.
+            // Link markup is stripped from removed and added lines, whitespace is collapsed,
+            // and the two multisets of lines must be equal. Only internal links (a path
+            // starting with one "/", or a PostLink slug) are stripped, so an external link,
+            // an extra attribute or changed link text is left in place and fails the match.
+            const ATTR_OK = new Set(['href', 'slug', 'class', 'className']);
+            const internalHref = (h) => /^\/(?!\/)[^\s"'`<>]*$/.test(h);
+            const tagLink = (m, tag, attrs, text) => {
+              const found = [...attrs.matchAll(/\s+([A-Za-z]+)=(?:"([^"]*)"|'([^']*)'|\{\s*"([^"]*)"\s*\}|\{\s*'([^']*)'\s*\})/g)];
+              if (found.map((a) => a[0]).join('') !== attrs) return m;
+              let target = 0;
+              for (const a of found) {
+                const name = a[1], value = a[2] ?? a[3] ?? a[4] ?? a[5];
+                if (!ATTR_OK.has(name)) return m;
+                if (name === 'href') { if (!internalHref(value)) return m; target += 1; }
+                if (name === 'slug') { if (tag !== 'PostLink' || !/^[a-z0-9-]+$/.test(value)) return m; target += 1; }
+              }
+              return target === 1 ? text : m;
+            };
+            const stripLinks = (line) => line
+              .replace(/(?<!!)\[([^\][\n]*)\]\(([^()\s]+)\)/g, (m, text, url) => (internalHref(url) ? text : m))
+              .replace(/<(a|Link|PostLink)((?:\s+[A-Za-z]+=(?:"[^"]*"|'[^']*'|\{\s*"[^"]*"\s*\}|\{\s*'[^']*'\s*\}))+)\s*>([^<>{}]*)<\/\1\s*>/g, tagLink);
+            const linkOnlyProblem = (patch, ignore) => {
+              const removed = [], added = [];
+              for (const line of patch.split('\n')) {
+                if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
+                let body = line.slice(1);
+                for (const re of ignore) body = body.replace(re, '');
+                body = stripLinks(body).replace(/\s+/g, ' ').trim();
+                if (body === '') continue;
+                (line[0] === '+' ? added : removed).push(body);
+              }
+              const count = new Map();
+              for (const l of removed) count.set(l, (count.get(l) || 0) + 1);
+              for (const l of added) {
+                if (!count.get(l)) return `changes words, not only links: "${l.slice(0, 80)}"`;
+                count.set(l, count.get(l) - 1);
+              }
+              for (const [l, n] of count) if (n > 0) return `removes or rewords text: "${l.slice(0, 80)}"`;
+              return null;
+            };
+
+            const IMAGE = /\.(jpe?g|png|webp|avif|gif)$/i;
+            const todayInLA = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+
+            // Returns the list of reasons to hold. Empty list means the files pass the rules.
+            function evaluate(kind, rules, files, today) {
+              const reasons = [];
+              if (!rules || rules.enabled !== true) reasons.push(`auto-merge is off for "${kind}" branches in .github/seo-automerge.json`);
+              if (!rules) return reasons;
+              const maxFiles = rules.maxFiles ?? 40;
+              const maxLines = rules.maxChangedLines ?? 400;
+              const lines = files.reduce((n, f) => n + (f.additions || 0) + (f.deletions || 0), 0);
+              // denyPatch: regular expressions (case-insensitive). A pull request that adds or
+              // removes a line matching one is held. An entry may be {"pattern", "files"} to
+              // apply only to files matching those globs.
+              const denyPatch = (rules.denyPatch || []).map((p) => (typeof p === 'string'
+                ? { re: new RegExp(p, 'i'), files: null, source: p }
+                : { re: new RegExp(p.pattern, 'i'), files: p.files, source: p.pattern }));
+              // linkOnlyIgnore: same shape as denyPatch, but case-sensitive and cut out of the line.
+              const ignore = (rules.linkOnlyIgnore || []).map((p) => (typeof p === 'string'
+                ? { re: new RegExp(p, 'g'), files: null }
+                : { re: new RegExp(p.pattern, 'g'), files: p.files }));
+              const future = rules.futureDate || null;
+              if (files.length === 0) reasons.push('no changed files');
+              if (files.length > maxFiles) reasons.push(`${files.length} files changed, limit is ${maxFiles}`);
+              if (lines > maxLines) reasons.push(`${lines} lines changed, limit is ${maxLines}`);
+              for (const f of files) {
+                const names = [f.filename, f.previous_filename].filter(Boolean);
+                for (const name of names) {
+                  if (hitAnyCase(name, HARD_DENY)) reasons.push(`\`${name}\` is never auto-merged`);
+                  else if (hitAnyCase(name, rules.deny)) reasons.push(`\`${name}\` is on this repo's deny list`);
+                  else if (!hit(name, rules.allow)) reasons.push(`\`${name}\` is outside the allowed paths`);
+                }
+                const binaryOk = f.status === 'added' && IMAGE.test(f.filename) && hit(f.filename, rules.binaryOk);
+                const needsPatch = denyPatch.length || hitAnyCase(f.filename, rules.linkOnly) || (future && hitAnyCase(f.filename, future.files));
+                if (needsPatch && typeof f.patch !== 'string' && !binaryOk) {
+                  reasons.push(`\`${f.filename}\` has no line-by-line diff to check (binary or too large)`);
+                } else if (typeof f.patch === 'string') {
+                  const rules_ = denyPatch.filter((d) => !d.files || hitAnyCase(f.filename, d.files));
+                  if (rules_.length) for (const line of f.patch.split('\n')) {
+                    if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
+                    const bad = rules_.find((d) => d.re.test(line.slice(1)));
+                    if (bad) { reasons.push(`\`${f.filename}\` adds or removes a protected line (rule: ${bad.source})`); break; }
+                  }
+                  if (hitAnyCase(f.filename, rules.linkOnly)) {
+                    const problem = linkOnlyProblem(f.patch, ignore.filter((g) => !g.files || hitAnyCase(f.filename, g.files)).map((g) => g.re));
+                    if (problem) reasons.push(`\`${f.filename}\` may only gain internal links inside existing sentences; this change ${problem}`);
+                  }
+                  if (future && hitAnyCase(f.filename, future.files)) {
+                    const fieldRe = new RegExp(`^\\+\\s*(${future.fields.join('|')})\\s*:\\s*(.*)$`);
+                    const dates = f.patch.split('\n').map((l) => l.match(fieldRe)).filter(Boolean);
+                    if (f.status !== 'added') reasons.push(`\`${f.filename}\` is not a new post, so its publish date cannot be checked`);
+                    else if (!dates.length) reasons.push(`\`${f.filename}\` has no ${future.fields.join(' or ')} line`);
+                    for (const d of dates) {
+                      const v = d[2].match(/^["']?(\d{4}-\d{2}-\d{2})["']?\s*(#.*)?$/);
+                      if (!v) reasons.push(`\`${f.filename}\` has a ${d[1]} that is not a plain YYYY-MM-DD date`);
+                      else if (!(v[1] > today)) reasons.push(`\`${f.filename}\` has ${d[1]} ${v[1]}, which is not after today (${today}), so it would go live at once`);
+                    }
+                  }
+                }
+                if (rules.addOnly === true && f.status !== 'added') reasons.push(`\`${f.filename}\` is ${f.status}; this branch type may only add new files`);
+                if (rules.addOnly !== true && (f.status === 'removed' || f.status === 'renamed')) reasons.push(`\`${f.filename}\` is ${f.status}; deleting or moving files needs a person`);
+              }
+              return [...new Set(reasons)];
+            }
+            // END RULES LOGIC
+
+            const { owner, repo } = context.repo;
+            const base = context.payload.repository.default_branch;
+            const sha = context.eventName === 'pull_request_target' ? context.payload.pull_request.head.sha : context.payload.sha;
+            const MARK = '<!-- seo-automerge -->';
 
             const prs = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', base, per_page: 100 });
             const pr = prs.find((p) => p.head.sha === sha && p.head.repo && p.head.repo.full_name === `${owner}/${repo}` && !p.draft);
@@ -53,45 +186,24 @@ jobs:
             const kind = pr.head.ref.startsWith('fix/seo-') ? 'fix' : pr.head.ref.startsWith('blog/') ? 'blog' : null;
             if (!kind) { core.info(`Branch ${pr.head.ref} is not an agent SEO branch.`); return; }
 
-            const cfgFile = await github.rest.repos.getContent({ owner, repo, path: '.github/seo-automerge.json', ref: base });
-            const cfg = JSON.parse(Buffer.from(cfgFile.data.content, 'base64').toString('utf8'));
-            const rules = cfg[kind];
-
-            const reasons = [];
-            if (!rules || rules.enabled !== true) reasons.push(`auto-merge is off for "${kind}" branches in .github/seo-automerge.json`);
-
-            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
-            if (rules) {
-              const maxFiles = rules.maxFiles ?? 40;
-              const maxLines = rules.maxChangedLines ?? 400;
-              const lines = files.reduce((n, f) => n + f.additions + f.deletions, 0);
-              // Optional: regular expressions (case-insensitive). A pull request that adds or
-              // removes any line matching one of them is held, for example prices or publish flags.
-              const denyPatch = (rules.denyPatch || []).map((p) => new RegExp(p, 'i'));
-              if (files.length === 0) reasons.push('no changed files');
-              if (files.length > maxFiles) reasons.push(`${files.length} files changed, limit is ${maxFiles}`);
-              if (lines > maxLines) reasons.push(`${lines} lines changed, limit is ${maxLines}`);
-              for (const f of files) {
-                const names = [f.filename, f.previous_filename].filter(Boolean);
-                for (const name of names) {
-                  if (hit(name, HARD_DENY)) reasons.push(`\`${name}\` is never auto-merged`);
-                  else if (hit(name, rules.deny)) reasons.push(`\`${name}\` is on this repo's deny list`);
-                  else if (!hit(name, rules.allow)) reasons.push(`\`${name}\` is outside the allowed paths`);
-                }
-                if (denyPatch.length) {
-                  if (typeof f.patch !== 'string') reasons.push(`\`${f.filename}\` has no line-by-line diff to check (binary or too large)`);
-                  else for (const line of f.patch.split('\n')) {
-                    if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
-                    const bad = denyPatch.find((re) => re.test(line.slice(1)));
-                    if (bad) { reasons.push(`\`${f.filename}\` adds or removes a protected line (rule: ${bad.source})`); break; }
-                  }
-                }
-                if (rules.addOnly === true && f.status !== 'added') reasons.push(`\`${f.filename}\` is ${f.status}; this branch type may only add new files`);
-                if (rules.addOnly !== true && (f.status === 'removed' || f.status === 'renamed')) reasons.push(`\`${f.filename}\` is ${f.status}; deleting or moving files needs a person`);
-              }
+            // On either trigger, go on only if every Vercel status on this exact commit is
+            // already success (newest status per context wins).
+            const statuses = await github.paginate(github.rest.repos.listCommitStatusesForRef, { owner, repo, ref: sha, per_page: 100 });
+            const latest = new Map();
+            for (const s of statuses) if (!latest.has(s.context)) latest.set(s.context, s.state);
+            const vercel = [...latest].filter(([c]) => c.startsWith('Vercel'));
+            if (!vercel.length || vercel.some(([, state]) => state !== 'success')) {
+              core.info(`Vercel is not green yet for ${sha}: ${JSON.stringify(vercel)}. A later status event will run this again.`);
+              return;
             }
 
+            const cfgFile = await github.rest.repos.getContent({ owner, repo, path: '.github/seo-automerge.json', ref: base });
+            const cfg = JSON.parse(Buffer.from(cfgFile.data.content, 'base64').toString('utf8'));
+            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
+            const reasons = evaluate(kind, cfg[kind], files, todayInLA());
+
             const full = (await github.rest.pulls.get({ owner, repo, pull_number: pr.number })).data;
+            if (full.head.sha !== sha) { core.info('The pull request moved to a newer commit; that commit gets its own run.'); return; }
             if (full.mergeable === false) reasons.push('the branch has conflicts with ' + base);
 
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr.number, per_page: 100 });

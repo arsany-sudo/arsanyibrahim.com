@@ -1,5 +1,5 @@
 {
-  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when the Vercel build passes and every changed file matches allow, matches no deny, and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). Set enabled to false to hold every pull request of that kind for a person. denyPatch lists regular expressions (case-insensitive): a pull request that adds or removes a line matching one is held.",
+  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when every Vercel status on its commit is green and every changed file matches allow (case-sensitive), matches no deny (any case), and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). In globs, ** matches any depth including none (components/**/*form* matches components/ContactForm.tsx). Set enabled to false to hold every pull request of that kind for a person. denyPatch: regular expressions (case-insensitive); a pull request that adds or removes a line matching one is held; an entry may be {pattern, files} to apply only to those files. linkOnly: files that may only gain internal links inside existing sentences (link markup stripped, removed lines must equal added lines). linkOnlyIgnore: regular expressions (case-sensitive) cut from each changed line of a linkOnly file before that comparison, for metadata such as meta titles and alt text; an entry may be {pattern, files}. futureDate: on new files matching files, every listed date field must be a plain YYYY-MM-DD after today in Los Angeles, so a new post can be scheduled but never go live at once. binaryOk: new image files there need no line diff.",
   "fix": {
     "enabled": true,
     "allow": [
@@ -10,14 +10,21 @@
     ],
     "deny": [
       "app/contact/**",
+      "app/layout.tsx",
       "components/**/*form*",
-      "components/**/*Form*",
+      "components/Footer.tsx",
+      "components/sections/ContactSection.tsx",
       "lib/site.ts"
     ],
     "maxFiles": 40,
     "maxChangedLines": 400,
     "denyPatch": [
-      "\\$\\s?\\d"
+      "\\$\\s?\\d",
+      "<script(?![^>]*ld\\+json)",
+      "<(iframe|object|embed|form|input|textarea|select|style|meta)\\b|<base\\s+href",
+      "\\son[a-z]+\\s*=\\s*[\"'{]",
+      "javascript:",
+      "\\bLLC\\b|legalName"
     ]
   },
   "blog": {
