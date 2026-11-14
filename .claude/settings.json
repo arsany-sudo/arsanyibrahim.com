@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh api -X POST repos/arsany-sudo/*/pulls *)",
+      "Bash(gh api repos/arsany-sudo/*/pulls*)",
+      "Bash(gh api repos/arsany-sudo/*/issues/*/comments*)"
+    ],
+    "deny": [
+      "Bash(git push origin main*)",
+      "Bash(git push * main*)",
+      "Bash(git push *:main*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push * --delete*)",
+      "Bash(git push origin :*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh api *merge*)",
+      "Bash(gh api *DELETE*)"
+    ]
+  }
+}
