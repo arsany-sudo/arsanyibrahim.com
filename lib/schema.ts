@@ -87,6 +87,7 @@ function otherOrgNode(c: typeof COMPANIES[number]) {
     name: c.name,
     url: c.url,
     founder: personRef,
+    // test line with a price: $5 (this pull request must be held)
     knowsAbout: c.industry,
   };
 }
