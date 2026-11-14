@@ -1,3 +1,4 @@
+// guard test: this pull request must be held, not merged
 import type { NextConfig } from "next";
 import path from "node:path";
 
