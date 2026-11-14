@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+// Merge-rule check: this file must never merge on its own.
 
 type Status = "idle" | "submitting" | "success" | "error";
 
