@@ -1,5 +1,5 @@
 {
-  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when every Vercel status on its commit is green and every changed file matches allow (case-sensitive), matches no deny (any case), and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). In globs, ** matches any depth including none (components/**/*form* matches components/ContactForm.tsx). Set enabled to false to hold every pull request of that kind for a person. denyPatch: regular expressions (case-insensitive); a pull request that adds or removes a line matching one is held; an entry may be {pattern, files} to apply only to those files. linkOnly: files that may only gain internal links inside existing sentences (link markup stripped, removed lines must equal added lines). linkOnlyIgnore: regular expressions (case-sensitive) cut from each changed line of a linkOnly file before that comparison, for metadata such as meta titles and alt text; an entry may be {pattern, files}. futureDate: on new files matching files, every listed date field must be a plain YYYY-MM-DD after today in Los Angeles, so a new post can be scheduled but never go live at once. binaryOk: new image files there need no line diff.",
+  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when every Vercel status on its commit is green and every changed file matches allow (case-sensitive), matches no deny (any case), and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). In globs, ** matches any depth including none (components/**/*form* matches components/ContactForm.tsx). Set enabled to false to hold every pull request of that kind for a person. denyPatch: regular expressions (case-insensitive); a pull request that adds or removes a line matching one is held; an entry may be {pattern, files} to apply only to those files. linkOnly: files that may only gain internal links inside existing sentences (link markup stripped, removed lines must equal added lines). linkOnlyIgnore: regular expressions (case-sensitive) cut from each changed line of a linkOnly file before that comparison, for metadata such as meta titles and alt text; an entry may be {pattern, files}. futureDate: on new files matching files, every listed date field must be a plain YYYY-MM-DD after today in Los Angeles, so a new post can be scheduled but never go live at once. binaryOk: new image files there need no line diff. lineOk: whole lines a linkOnly file may change besides links, such as a meta title, meta description or heading. Entry {files, allow, prev, next, deny, pair}: a changed line of at most 300 characters is accepted when it matches an allow pattern (case-sensitive, anchored with ^ and $), matches no deny pattern (case-insensitive), and the lines just before (prev, nearest first) and after (next) it in the same version of the file match. pair (default true) means every accepted added line must replace an accepted removed line, so a heading can be reworded but not added or deleted. denyPatch still applies to every line. A rule that cannot be compiled holds every pull request. Personal site: page and component files are linkOnly so body copy, About, Hero and FAQ sentences wait for a person; titles, meta descriptions, headings and alt text may change.",
   "fix": {
     "enabled": true,
     "allow": [
@@ -15,6 +15,149 @@
       "components/Footer.tsx",
       "components/sections/ContactSection.tsx",
       "lib/site.ts"
+    ],
+    "linkOnly": [
+      "app/**/*.tsx",
+      "components/**"
+    ],
+    "linkOnlyIgnore": [
+      "\\salt=(\\\"[^\\\"]*\\\"|\\{\\\"[^\\\"]*\\\"\\})"
+    ],
+    "lineOk": [
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^export const metadata(?:: Metadata)? = \\{$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))  title: (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^  title: .*,$",
+          "^export const metadata(?:: Metadata)? = \\{$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))  description: (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^  title: .*,$",
+          "^export const metadata(?:: Metadata)? = \\{$"
+        ],
+        "next": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))    (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ],
+        "allow": [
+          "^  description:$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^  description:$",
+          "^  title: .*,$",
+          "^export const metadata(?:: Metadata)? = \\{$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))    (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^  (?:openGraph|twitter): \\{$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))    title: (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^    title: .*,$",
+          "^  (?:openGraph|twitter): \\{$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))    description: (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^    title: .*,$",
+          "^  (?:openGraph|twitter): \\{$"
+        ],
+        "next": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))      (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ],
+        "allow": [
+          "^    description:$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/page.tsx"
+        ],
+        "pair": false,
+        "prev": [
+          "^    description:$",
+          "^    title: .*,$",
+          "^  (?:openGraph|twitter): \\{$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))      (?:\"[^\"\\\\$<>{}`]*\"|'[^'\\\\$<>{}`]*'),$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/*.tsx",
+          "components/**/*.tsx"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))\\s*<h([1-3])(?:\\s+(?:class|className|id|style)=\"[^\"<>{}]*\"|\\s+data-reveal)*>[^<>{}$\\\\`]+</h\\1>\\s*$"
+        ]
+      },
+      {
+        "files": [
+          "app/**/*.tsx",
+          "components/**/*.tsx"
+        ],
+        "prev": [
+          "^\\s*(?:<h[1-3]\\b[^<>{}]*)?>\\s*$"
+        ],
+        "next": [
+          "^\\s*</h[1-3]>\\s*$"
+        ],
+        "allow": [
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))\\s*[^\\s<>{}$\\\\`][^<>{}$\\\\`]*$"
+        ]
+      }
     ],
     "maxFiles": 40,
     "maxChangedLines": 400,

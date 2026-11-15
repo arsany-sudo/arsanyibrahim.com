@@ -88,11 +88,85 @@ jobs:
             const stripLinks = (line) => line
               .replace(/(?<!!)\[([^\][\n]*)\]\(([^()\s]+)\)/g, (m, text, url) => (internalHref(url) ? text : m))
               .replace(/<(a|Link|PostLink)((?:\s+[A-Za-z]+=(?:"[^"]*"|'[^']*'|\{\s*"[^"]*"\s*\}|\{\s*'[^']*'\s*\}))+)\s*>([^<>{}]*)<\/\1\s*>/g, tagLink);
-            const linkOnlyProblem = (patch, ignore) => {
+            // lineOk: whole changed lines that a linkOnly file may change besides links, such as a
+            // meta title or a heading. Entry: {files, allow, prev?, next?, deny?, pair?}. A changed
+            // line (added or removed) is accepted when it is at most LINE_OK_MAX characters, matches
+            // one allow pattern (case-sensitive, anchored with ^ and $), matches no deny pattern
+            // (case-insensitive), and the lines just before and after it in the same version of the
+            // file match prev and next when they are given: a pattern, or a list of patterns for the
+            // nearest line first, then the one before it (a neighbour outside the patch never
+            // matches). With pair (the default) each allow pattern must accept as many added lines
+            // as removed lines, so a line can be reworded but not added or deleted. denyPatch still
+            // applies to every accepted line. A malformed entry holds every pull request.
+            const LINE_OK_MAX = 300;
+            const LINE_OK_KEYS = new Set(['files', 'allow', 'prev', 'next', 'deny', 'pair']);
+            const anchored = (p) => typeof p === 'string' && p.length > 1 && p.startsWith('^') && p.endsWith('$') && !p.endsWith('\\$');
+            const compileLineOk = (list) => {
+              if (list === undefined) return [];
+              if (!Array.isArray(list)) throw new Error('lineOk must be a list');
+              return list.map((e, i) => {
+                const bad = (why) => { throw new Error(`lineOk entry ${i + 1} ${why}`); };
+                if (!e || typeof e !== 'object' || Array.isArray(e)) bad('is not an object');
+                for (const k of Object.keys(e)) if (!LINE_OK_KEYS.has(k)) bad(`has an unknown key "${k}"`);
+                if (!Array.isArray(e.files) || !e.files.length || e.files.some((g) => typeof g !== 'string')) bad('needs a non-empty files list');
+                if (!Array.isArray(e.allow) || !e.allow.length) bad('needs a non-empty allow list');
+                const ctx = (c, k) => {
+                  if (c === undefined) return [];
+                  const l = Array.isArray(c) ? c : [c];
+                  if (!l.length) bad(`has an empty ${k} list`);
+                  return l;
+                };
+                const prev = ctx(e.prev, 'prev'), next = ctx(e.next, 'next');
+                for (const p of [...e.allow, ...prev, ...next]) if (!anchored(p)) bad(`has a pattern not anchored with ^ and $: ${String(p).slice(0, 60)}`);
+                if (e.deny !== undefined && (!Array.isArray(e.deny) || e.deny.some((p) => typeof p !== 'string' || !p))) bad('has a deny that is not a list of patterns');
+                if (e.pair !== undefined && typeof e.pair !== 'boolean') bad('has a pair that is not true or false');
+                return {
+                  files: e.files,
+                  allow: e.allow.map((p) => new RegExp(p)),
+                  prev: prev.map((p) => new RegExp(p)),
+                  next: next.map((p) => new RegExp(p)),
+                  deny: (e.deny || []).map((p) => new RegExp(p, 'i')),
+                  pair: e.pair !== false,
+                };
+              });
+            };
+            const linkOnlyProblem = (patch, ignore, okRules = []) => {
               const removed = [], added = [];
-              for (const line of patch.split('\n')) {
+              const lines = patch.split('\n');
+              // The n nearest lines before (step -1) or after (step 1) line i in the same version of
+              // the file: context lines and lines with the same sign count, the other side is skipped.
+              // Fewer than n come back when the patch shows fewer.
+              const near = (i, step, sign, n) => {
+                const out = [];
+                for (let j = i + step; out.length < n && j >= 0 && j < lines.length; j += step) {
+                  if (lines[j].startsWith('@@')) break;
+                  if (lines[j][0] === ' ' || lines[j][0] === sign) out.push(lines[j].slice(1));
+                }
+                return out;
+              };
+              const fits = (res, got) => res.every((re, k) => k < got.length && re.test(got[k]));
+              const okKey = (i, sign, body) => {
+                if (body.length > LINE_OK_MAX) return null;
+                for (let e = 0; e < okRules.length; e++) {
+                  const r = okRules[e];
+                  const a = r.allow.findIndex((re) => re.test(body));
+                  if (a < 0 || r.deny.some((re) => re.test(body))) continue;
+                  if (!fits(r.prev, near(i, -1, sign, r.prev.length))) continue;
+                  if (!fits(r.next, near(i, 1, sign, r.next.length))) continue;
+                  return { key: `${e}:${a}`, pair: r.pair };
+                }
+                return null;
+              };
+              const okCount = new Map();
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
                 if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
                 let body = line.slice(1);
+                const ok = okKey(i, line[0], body);
+                if (ok) {
+                  if (ok.pair) { const c = okCount.get(ok.key) || 0; okCount.set(ok.key, c + (line[0] === '+' ? 1 : -1)); }
+                  continue;
+                }
                 for (const re of ignore) body = body.replace(re, '');
                 body = stripLinks(body).replace(/\s+/g, ' ').trim();
                 if (body === '') continue;
@@ -105,6 +179,7 @@ jobs:
                 count.set(l, count.get(l) - 1);
               }
               for (const [l, n] of count) if (n > 0) return `removes or rewords text: "${l.slice(0, 80)}"`;
+              for (const [, n] of okCount) if (n !== 0) return 'adds or deletes a whole title, description or heading line instead of rewording one';
               return null;
             };
 
@@ -122,13 +197,28 @@ jobs:
               // denyPatch: regular expressions (case-insensitive). A pull request that adds or
               // removes a line matching one is held. An entry may be {"pattern", "files"} to
               // apply only to files matching those globs.
-              const denyPatch = (rules.denyPatch || []).map((p) => (typeof p === 'string'
-                ? { re: new RegExp(p, 'i'), files: null, source: p }
-                : { re: new RegExp(p.pattern, 'i'), files: p.files, source: p.pattern }));
               // linkOnlyIgnore: same shape as denyPatch, but case-sensitive and cut out of the line.
-              const ignore = (rules.linkOnlyIgnore || []).map((p) => (typeof p === 'string'
-                ? { re: new RegExp(p, 'g'), files: null }
-                : { re: new RegExp(p.pattern, 'g'), files: p.files }));
+              // A rule that cannot be compiled (bad regular expression, bad lineOk entry) holds the
+              // pull request instead of failing the run.
+              let denyPatch, ignore, lineOk;
+              try {
+                denyPatch = (rules.denyPatch || []).map((p) => (typeof p === 'string'
+                  ? { re: new RegExp(p, 'i'), files: null, source: p }
+                  : { re: new RegExp(p.pattern, 'i'), files: p.files, source: p.pattern }));
+                ignore = (rules.linkOnlyIgnore || []).map((p) => (typeof p === 'string'
+                  ? { re: new RegExp(p, 'g'), files: null }
+                  : { re: new RegExp(p.pattern, 'g'), files: p.files }));
+                lineOk = compileLineOk(rules.lineOk);
+                if (rules.dataFiles !== undefined && (!Array.isArray(rules.dataFiles) || rules.dataFiles.some((d) => typeof d !== 'string'))) throw new Error('dataFiles must be a list of paths');
+              } catch (e) {
+                reasons.push(`a rule in .github/seo-automerge.json cannot be used (${String(e && e.message).slice(0, 160)}), so nothing auto-merges until it is fixed`);
+                return reasons;
+              }
+              // dataFiles: exact paths of JSON data files under scripts/ that may be modified although
+              // scripts/** is on the built-in list, such as a recorded SEO baseline that nothing reads
+              // at build time. Exact names only, existing files only, and allow must list them too.
+              const dataFile = (f, name) => f.status === 'modified' && name === f.filename
+                && /^scripts\/[A-Za-z0-9._-]+\.json$/.test(name) && (rules.dataFiles || []).includes(name);
               const future = rules.futureDate || null;
               if (files.length === 0) reasons.push('no changed files');
               if (files.length > maxFiles) reasons.push(`${files.length} files changed, limit is ${maxFiles}`);
@@ -136,7 +226,7 @@ jobs:
               for (const f of files) {
                 const names = [f.filename, f.previous_filename].filter(Boolean);
                 for (const name of names) {
-                  if (hitAnyCase(name, HARD_DENY)) reasons.push(`\`${name}\` is never auto-merged`);
+                  if (hitAnyCase(name, HARD_DENY) && !dataFile(f, name)) reasons.push(`\`${name}\` is never auto-merged`);
                   else if (hitAnyCase(name, rules.deny)) reasons.push(`\`${name}\` is on this repo's deny list`);
                   else if (!hit(name, rules.allow)) reasons.push(`\`${name}\` is outside the allowed paths`);
                 }
@@ -152,7 +242,8 @@ jobs:
                     if (bad) { reasons.push(`\`${f.filename}\` adds or removes a protected line (rule: ${bad.source})`); break; }
                   }
                   if (hitAnyCase(f.filename, rules.linkOnly)) {
-                    const problem = linkOnlyProblem(f.patch, ignore.filter((g) => !g.files || hitAnyCase(f.filename, g.files)).map((g) => g.re));
+                    const problem = linkOnlyProblem(f.patch, ignore.filter((g) => !g.files || hitAnyCase(f.filename, g.files)).map((g) => g.re),
+                      lineOk.filter((r) => hit(f.filename, r.files)));
                     if (problem) reasons.push(`\`${f.filename}\` may only gain internal links inside existing sentences; this change ${problem}`);
                   }
                   if (future && hitAnyCase(f.filename, future.files)) {

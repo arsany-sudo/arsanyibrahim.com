@@ -16,6 +16,7 @@ Read by the scheduled SEO tasks (Site fix, Blog, monthly strategist). The task p
 - Never push to main and never merge your own pull request.
 - Site fixes: branch fix/seo-<short-issue>-<YYYYMMDD>, one pull request per issue.
 - .github/workflows/seo-automerge.yml merges the pull request on its own when the Vercel build passes and every changed file is inside .github/seo-automerge.json. Otherwise it leaves a comment that says why and the pull request waits for Arsany.
+- Page and component files (app/**/*.tsx, components/**) auto-merge only for internal links inside existing sentences, alt text, the literal title and description lines of a page's metadata object, and rewording an existing H1 to H3. Body copy (Hero, About, FAQ and any other sentence) and new copy wait for Arsany.
 - Never edit anything under .github, package files, config files, env files or app/api.
 
 ## Off limits on this site
