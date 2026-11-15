@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { FadeIn } from "@/components/FadeIn";
 import { COMPANIES, PERSON, TIMELINE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: {
+    absolute:
+      "About Arsany Ibrahim | Marketing Strategist & Founder of Elite Créatif",
+  },
   description:
     "Arsany Ibrahim is a Los Angeles marketing strategist and founder of Elite Créatif. He has overseen more than $20M in managed ad spend and founded four companies.",
   alternates: { canonical: "/about" },
@@ -94,7 +98,14 @@ export default function AboutPage() {
                     className="flex items-baseline justify-between gap-6 py-3 border-b border-[color:var(--color-border)]"
                   >
                     <div>
-                      <p className="display text-xl">{c.name}</p>
+                      <p className="display text-xl">
+                        <Link
+                          href={`/companies/${c.slug}`}
+                          className="hover:text-[color:var(--color-accent)]"
+                        >
+                          {c.name}
+                        </Link>
+                      </p>
                       <p className="text-sm text-[color:var(--color-muted)] mt-1">
                         {c.short}
                       </p>
