@@ -1,5 +1,5 @@
 {
-  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when every Vercel status on its commit is green and every changed file matches allow (case-sensitive), matches no deny (any case), and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). In globs, ** matches any depth including none (components/**/*form* matches components/ContactForm.tsx). Set enabled to false to hold every pull request of that kind for a person. denyPatch: regular expressions (case-insensitive); a pull request that adds or removes a line matching one is held; an entry may be {pattern, files} to apply only to those files. linkOnly: files that may only gain internal links inside existing sentences (link markup stripped, removed lines must equal added lines). linkOnlyIgnore: regular expressions (case-sensitive) cut from each changed line of a linkOnly file before that comparison, for metadata such as meta titles and alt text; an entry may be {pattern, files}. futureDate: on new files matching files, every listed date field must be a plain YYYY-MM-DD after today in Los Angeles, so a new post can be scheduled but never go live at once. binaryOk: new image files there need no line diff. lineOk: whole lines a linkOnly file may change besides links, such as a meta title, meta description or heading. Entry {files, allow, prev, next, deny, pair}: a changed line of at most 300 characters is accepted when it matches an allow pattern (case-sensitive, anchored with ^ and $), matches no deny pattern (case-insensitive), and the lines just before (prev, nearest first) and after (next) it in the same version of the file match. pair (default true) means every accepted added line must replace an accepted removed line, so a heading can be reworded but not added or deleted. denyPatch still applies to every line. A rule that cannot be compiled holds every pull request. Personal site: page and component files are linkOnly so body copy, About, Hero and FAQ sentences wait for a person; titles, meta descriptions, headings and alt text may change.",
+  "_readme": "Rules for .github/workflows/seo-automerge.yml. Read from the default branch only. A pull request from a fix/seo-* or blog/* branch merges on its own when every Vercel status on its commit is green and every changed file matches allow (case-sensitive), matches no deny (any case), and the size limits hold. The workflow also has a built-in list that is never auto-merged (workflows, package files, config, env, API routes, scripts). In globs, ** matches any depth including none (components/**/*form* matches components/ContactForm.tsx). Set enabled to false to hold every pull request of that kind for a person. denyPatch: regular expressions (case-insensitive); a pull request that adds or removes a line matching one is held; an entry may be {pattern, files} to apply only to those files. linkOnly: files that may only gain internal links inside existing sentences (link markup stripped, removed lines must equal added lines). linkOnlyIgnore: regular expressions (case-sensitive) cut from each changed line of a linkOnly file before that comparison, for metadata such as meta titles and alt text; an entry may be {pattern, files}. futureDate: on new files matching files, every listed date field must be a plain YYYY-MM-DD after today in Los Angeles, so a new post can be scheduled but never go live at once. binaryOk: new image files there need no line diff. lineOk: whole lines a linkOnly file may change besides links, such as a meta title, meta description or heading. Entry {files, allow, prev, next, deny, pair}: a changed line of at most 300 characters is accepted when it matches an allow pattern (case-sensitive, anchored with ^ and $), matches no deny pattern (case-insensitive), and the lines just before (prev, nearest first) and after (next) it in the same version of the file match. pair (default true) means every accepted added line must replace an accepted removed line, so a heading can be reworded but not added or deleted. denyPatch still applies to every line. A rule that cannot be compiled holds every pull request. Personal site: page and component files are linkOnly so body copy, About, Hero and FAQ sentences wait for a person; titles, meta descriptions, headings and alt text may change. Since the 2026-11-15 rework: deny checks (denyPatch, lineOk deny, denySquashed) test each changed line and a folded copy with HTML entities, escapes, invisible characters, accents and Cyrillic or Greek look-alikes undone. denySquashed: lowercase words held when they appear in a changed line with everything but letters and digits removed. hosts: the only URL hosts a changed line outside Markdown may name. health: true makes every line accepted by lineOk plain ASCII. Built in, whatever this file says: fix branches may only modify existing files (an added file needs a newFiles glob; none are set); blog branches may only add Markdown posts under futureDate files, or binaryOk images; a changed line over 2,000 characters holds; a non-Markdown line that adds or removes code, a lowercase HTML element that loads or runs something, an event handler, a redirect, noindex, nofollow, disallow or canonical, or a URL host not in hosts, holds; route, middleware, proxy, robots, API, config, HTML and public JS files never merge; outside linkOnly only .ts, .js, .json and .txt files may change, and .ts, .js and .json files only with plain data lines. lineOk: pair (the default) means a reworded line must be replaced inside the same change block with the same shape (attributes, keys and indentation unchanged); pair false needs a prev check; frontmatter: true accepts the line only inside the --- block at the top of the file. A line that linkOnlyIgnore empties must also be replaced in place. Removed and added lines are compared per change block, so text cannot move. futureDate reads exactly one plain unquoted key from the new post's frontmatter and holds quoted, repeated or other date-like keys. An unknown key in a lane, a lineOk pattern with a top-level |, or a rule file that does not parse holds every pull request.",
   "fix": {
     "enabled": true,
     "allow": [
@@ -140,7 +140,7 @@
           "components/**/*.tsx"
         ],
         "allow": [
-          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))\\s*<h([1-3])(?:\\s+(?:class|className|id|style)=\"[^\"<>{}]*\"|\\s+data-reveal)*>[^<>{}$\\\\`]+</h\\1>\\s*$"
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))\\s*<h([1-3])(?:\\s+(?:class|className|id)=\"[^\"<>{}]*\"|\\s+data-reveal)*>[^<>{}$\\\\`]{1,120}</h\\1>\\s*$"
         ]
       },
       {
@@ -155,7 +155,7 @@
           "^\\s*</h[1-3]>\\s*$"
         ],
         "allow": [
-          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))\\s*[^\\s<>{}$\\\\`][^<>{}$\\\\`]*$"
+          "^(?!.*(?:://|www\\.|\\bimport\\b|\\bexport\\b|<script))\\s*[^\\s<>{}$\\\\`][^<>{}$\\\\`]{0,119}$"
         ]
       }
     ],
@@ -168,6 +168,18 @@
       "\\son[a-z]+\\s*=\\s*[\"'{]",
       "javascript:",
       "\\bLLC\\b|legalName"
+    ],
+    "hosts": [
+      "arsanyibrahim.com",
+      "www.arsanyibrahim.com",
+      "elitecreatif.com",
+      "www.elitecreatif.com",
+      "schema.org",
+      "www.w3.org",
+      "www.linkedin.com",
+      "www.instagram.com",
+      "www.tiktok.com",
+      "x.com"
     ]
   },
   "blog": {
@@ -175,6 +187,18 @@
     "allow": [],
     "addOnly": true,
     "maxFiles": 12,
-    "maxChangedLines": 3000
+    "maxChangedLines": 3000,
+    "hosts": [
+      "arsanyibrahim.com",
+      "www.arsanyibrahim.com",
+      "elitecreatif.com",
+      "www.elitecreatif.com",
+      "schema.org",
+      "www.w3.org",
+      "www.linkedin.com",
+      "www.instagram.com",
+      "www.tiktok.com",
+      "x.com"
+    ]
   }
 }

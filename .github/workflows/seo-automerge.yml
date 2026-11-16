@@ -42,11 +42,13 @@ jobs:
             // BEGIN RULES LOGIC (pure functions; the test harness extracts and runs this block)
             // Never auto-merged, whatever the rules file says. Matched without regard to case.
             const HARD_DENY = [
-              '.github/**', '.claude/**', '.env*', '**/.env*',
-              'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb',
-              '*.config.*', 'tsconfig.json', 'vercel.json',
-              'middleware.*', 'proxy.*', 'src/middleware.*', 'src/proxy.*',
-              'app/api/**', 'src/app/api/**', 'pages/api/**', 'src/pages/api/**',
+              '.github/**', '.claude/**', '**/.*', '**/.*/**', '.env*', '**/.env*',
+              '**/package.json', '**/package-lock.json', '**/pnpm-lock.yaml', '**/pnpm-workspace.yaml', '**/yarn.lock', '**/bun.lock', '**/bun.lockb', '**/*.lock',
+              '**/*.config.*', '**/tsconfig*.json', '**/vercel.json', '**/netlify.toml', '**/Dockerfile', '**/Makefile',
+              '**/middleware.*', '**/proxy.*', '**/instrumentation*', '**/route.*', '**/robots.*', '**/_headers', '**/_redirects',
+              '**/api/**', '**/actions/**', '**/actions.*', '**/*.server.*',
+              'src/pages/**/*.ts', 'src/pages/**/*.js', 'src/pages/**/*.mts', 'src/pages/**/*.mjs',
+              '**/*.html', '**/*.htm', '**/*.php', '**/*.sh', 'public/**/*.js', 'public/**/*.mjs', 'public/**/*.cjs',
               'supabase/**', 'prisma/**', 'drizzle/**', 'migrations/**', 'scripts/**',
             ];
 
@@ -62,17 +64,94 @@ jobs:
               }
               return new RegExp('^' + re + '$', flags);
             };
-            // allow is case-sensitive (narrow); deny, linkOnly and the rest are not (wide).
+            // allow and newFiles are case-sensitive (narrow); deny, linkOnly and the rest are not (wide).
             const hit = (file, globs, flags = '') => (globs || []).some((g) => toRe(g, flags).test(file));
             const hitAnyCase = (file, globs) => hit(file, globs, 'i');
 
+            // fold: a copy of a line with look-alike tricks undone, so every deny check sees the plain
+            // letters: HTML entities, JS and JSON escapes and %xx are decoded, NFKD with combining marks
+            // removed, invisible format characters (zero-width, soft hyphen, bidi) removed, and common
+            // Cyrillic and Greek look-alikes mapped to Latin. Deny checks test the raw line and this copy.
+            const CONF_FROM = '\u0430\u0432\u0435\u043a\u043c\u043d\u043e\u0440\u0441\u0442\u0443\u0445\u0456\u0458\u0455\u0501\u04cf\u0261\u0578\u057d\u0410\u0412\u0415\u041a\u041c\u041d\u041e\u0420\u0421\u0422\u0423\u0425\u0406\u0408\u0405\u03b1\u03b2\u03b5\u03b7\u03b9\u03ba\u03bd\u03bf\u03c1\u03c4\u03c5\u03c7\u03c9\u0391\u0392\u0395\u0396\u0397\u0399\u039a\u039c\u039d\u039f\u03a1\u03a4\u03a5\u03a7\u0131\u2113';
+            const CONF_TO = 'abekmhopctyxijsdlgnuABEKMHOPCTYXIJSabeniknoptuxwABEZHIKMNOPTYXil';
+            const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', shy: '', zwj: '', zwnj: '', zwsp: '', ZeroWidthSpace: '', NoBreak: '', percnt: '%', dollar: '$', excl: '!', sol: '/', colon: ':', period: '.', hyphen: '-', dash: '-', num: '#', mdash: '\u2014', ndash: '\u2013', lpar: '(', rpar: ')' };
+            const cp = (n) => (n >= 0 && n <= 0x10ffff ? String.fromCodePoint(n) : '');
+            const fold = (s) => {
+              let t = s;
+              for (let k = 0; k < 2; k++) {
+                t = t.replace(/&#x([0-9a-f]{1,6});?/gi, (m, h) => cp(parseInt(h, 16)))
+                  .replace(/&#(\d{1,7});?/g, (m, d) => cp(Number(d)))
+                  .replace(/&([A-Za-z]+);/g, (m, n) => (Object.prototype.hasOwnProperty.call(ENT, n) ? ENT[n] : m))
+                  .replace(/\\u\{([0-9a-f]{1,6})\}/gi, (m, h) => cp(parseInt(h, 16)))
+                  .replace(/\\u([0-9a-f]{4})/gi, (m, h) => cp(parseInt(h, 16)))
+                  .replace(/\\x([0-9a-f]{2})/gi, (m, h) => cp(parseInt(h, 16)))
+                  .replace(/%([0-9a-f]{2})/gi, (m, h) => cp(parseInt(h, 16)))
+                  .replace(/\\([^A-Za-z0-9])/g, '$1');
+              }
+              t = t.normalize('NFKD').replace(/\p{M}/gu, '').replace(/[\p{Cf}\u034f\u115f\u1160\u3164\uffa0\u180e\u2800]/gu, '');
+              let out = '';
+              for (const ch of t) { const i = CONF_FROM.indexOf(ch); out += i < 0 ? ch : CONF_TO[i]; }
+              return out;
+            };
+            const squash = (s) => fold(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+            const anyRe = (res, line) => { const f = fold(line); return res.find((re) => re.test(line) || re.test(f)); };
+
+            // Elements matched in any letter case in Markdown; in code only when the tag starts with a
+            // lowercase letter (a capitalised tag such as <Base> or <Link> is a component, not this element).
+            const BAD_TAGS = new Set(['script', 'iframe', 'object', 'embed', 'frame', 'frameset', 'applet', 'portal', 'base', 'meta', 'link', 'style', 'form', 'input', 'button', 'textarea', 'select', 'svg', 'math', 'template', 'noscript']);
+            // Built-in line checks. CODE: every changed line of a file that is not Markdown. MARKUP: every
+            // changed line of a Markdown file. They hold code capability, outside resources and deindexing.
+            const CODE = [
+              /process\s*(\.|\[)|import\.meta|\bfetch\s*\(|XMLHttpRequest|sendBeacon|\bimport\s*\(|^\s*import\b|^\s*export\s*[*{]|\brequire\s*\(|\beval\s*\(|\bFunction\s*\(|setTimeout|setInterval|WebSocket|EventSource|postMessage|localStorage|sessionStorage|\bdocument\s*\.|\bwindow\s*\.|globalThis|navigator\s*\.|dangerouslySetInnerHTML|innerHTML|outerHTML|use server|child_process|\bexecSync\b|\bspawn\s*\(/i,
+              { source: 'an HTML element that loads or runs something', test: (s) => [...s.matchAll(/<\s*\/?\s*([A-Za-z][\w-]*)/g)].some((m) => /^[a-z]/.test(m[1]) && BAD_TAGS.has(m[1].toLowerCase())) },
+              /\son[a-z]+\s*=|(java|vb|live)script\s*:|\bdata\s*:\s*[a-z]+\/|\bsrcdoc\b|\bformaction\b|http-equiv/i,
+              /redirect|\blocation\s*(\.|=)|\bnoindex\b|\bnofollow\b|\bnoarchive\b|\bnosnippet\b|\bnoimageindex\b|unavailable_after|x-robots-tag|\bdisallow\b|\bindex\s*:\s*false|\bfollow\s*:\s*false|\bgooglebot\b|\bcanonical\b|\brobots\s*[:=]/i,
+            ];
+            const MARKUP = [
+              /<\s*\/?\s*(script|iframe|object|embed|frame|frameset|applet|portal|base|meta|link|style|form|input|button|textarea|select|svg|math|template|noscript)\b|\son[a-z]+\s*=|(java|vb|live)script\s*:|\bdata\s*:\s*[a-z]+\/|\bsrcdoc\b|<!--|^\s*import\s+([\w*{}\s,]+\s+from\s+)?["']|^\s*export\s+(const|let|var|function|default|class|async)\b/i,
+            ];
+            // URL hosts (anything after "//") in a changed line of a file that is not Markdown must be on
+            // the lane's hosts list.
+            const hostsIn = (line) => [...line.matchAll(/\/\/([^\/\s"'`<>\\)(?#]*)/g)].map((m) => m[1].replace(/^.*@/, '').replace(/:\d*$/, '').toLowerCase()).filter(Boolean);
+
+            // Allowed files that are not linkOnly and not Markdown or text: every changed line must be a plain
+            // data line (a key with a literal, a dotted name or an opening bracket, a literal list item, a
+            // closing bracket, or a // comment), so no executable code can ride in through a data file.
+            const STR = `"(?:[^"\\\\<\`]|\\\\(?:["\\\\/bfnrt]|u[0-9a-fA-F]{4}))*"|'(?:[^'\\\\<\`]|\\\\(?:['\\\\/bfnrt]|u[0-9a-fA-F]{4}))*'`;
+            const LIT = `(?:${STR}|-?\\d+(?:\\.\\d+)?|true|false|null)`;
+            const KEY = `(?:${STR}|[A-Za-z_$@][\\w$@-]*)`;
+            const VAL = `(?:${LIT}|[A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*|\\[\\s*(?:${LIT}(?:\\s*,\\s*${LIT})*\\s*,?)?\\s*\\]|\\{\\s*\\}|\\[|\\{)`;
+            const KV = `${KEY}\\s*:\\s*${LIT}`;
+            const DATA_LINE = new RegExp(`^(?:|//(?!.*(?:/\\*|\\*/)).*|[\\]}]+[,;]?|${KEY}\\s*:\\s*${VAL}?\\s*,?|${LIT}\\s*,?|\\{\\s*(?:${KV}(?:\\s*,\\s*${KV})*\\s*,?)?\\s*\\}\\s*,?|\\{|\\[)$`);
+
+            // A patch, line by line: sign, body, old and new line number, change block (a run of + and -
+            // lines with no context line between) and hunk. null if a line is not a patch line.
+            const parsePatch = (patch) => {
+              const out = []; let o = 0, n = 0, block = -1, inBlock = false, hunk = -1;
+              for (const raw of patch.split('\n')) {
+                const h = raw.match(/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+                if (h) { o = Number(h[1]); n = Number(h[2]); hunk += 1; inBlock = false; out.push({ sign: '@', hunk }); continue; }
+                if (raw.startsWith('\\')) { out.push({ sign: '\\', hunk }); continue; }
+                const sign = raw[0];
+                if (hunk < 0 || (sign !== ' ' && sign !== '+' && sign !== '-')) return null;
+                if (sign === ' ') { inBlock = false; out.push({ sign, body: raw.slice(1), oldNo: o++, newNo: n++, hunk }); continue; }
+                if (!inBlock) { block += 1; inBlock = true; }
+                out.push({ sign, body: raw.slice(1), oldNo: sign === '-' ? o++ : o, newNo: sign === '+' ? n++ : n, block, hunk });
+              }
+              return out;
+            };
+
             // linkOnly: a change passes only if it adds internal links and nothing else.
             // Link markup is stripped from removed and added lines, whitespace is collapsed,
-            // and the two multisets of lines must be equal. Only internal links (a path
-            // starting with one "/", or a PostLink slug) are stripped, so an external link,
-            // an extra attribute or changed link text is left in place and fails the match.
+            // and in each change block the removed and added lines must be equal as multisets. Only
+            // internal links (a path starting with one "/", or a PostLink slug) are stripped, so an external
+            // link, an extra attribute or changed link text is left in place and fails the match.
             const ATTR_OK = new Set(['href', 'slug', 'class', 'className']);
-            const internalHref = (h) => /^\/(?!\/)[^\s"'`<>]*$/.test(h);
+            // A link's class may only name plain classes, never ones that move, hide or layer it (an
+            // overlay over the page) and never arbitrary [values].
+            const classOk = (v) => v.split(/\s+/).filter(Boolean).every((t) => /^[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)?$/.test(t)
+              && !/^(?:fixed|absolute|sticky|relative|inset|z-|top-|bottom-|left-|right-|start-|end-|[wh]-|min-|max-|size-|scale|translate|rotate|skew|transform|hidden|invisible|visible|opacity|sr-only|not-sr-only|pointer-events|overflow|clip|contents|float|order|isolate|mix-|backdrop|filter|blur|bg-|before|after|content-)/.test(t.split(':').pop()));
+            const internalHref = (h) => /^\/(?![\/\\])[^\s"'`<>\\]*$/.test(h);
             const tagLink = (m, tag, attrs, text) => {
               const found = [...attrs.matchAll(/\s+([A-Za-z]+)=(?:"([^"]*)"|'([^']*)'|\{\s*"([^"]*)"\s*\}|\{\s*'([^']*)'\s*\})/g)];
               if (found.map((a) => a[0]).join('') !== attrs) return m;
@@ -80,6 +159,7 @@ jobs:
               for (const a of found) {
                 const name = a[1], value = a[2] ?? a[3] ?? a[4] ?? a[5];
                 if (!ATTR_OK.has(name)) return m;
+                if ((name === 'class' || name === 'className') && !classOk(value)) return m;
                 if (name === 'href') { if (!internalHref(value)) return m; target += 1; }
                 if (name === 'slug') { if (tag !== 'PostLink' || !/^[a-z0-9-]+$/.test(value)) return m; target += 1; }
               }
@@ -88,19 +168,33 @@ jobs:
             const stripLinks = (line) => line
               .replace(/(?<!!)\[([^\][\n]*)\]\(([^()\s]+)\)/g, (m, text, url) => (internalHref(url) ? text : m))
               .replace(/<(a|Link|PostLink)((?:\s+[A-Za-z]+=(?:"[^"]*"|'[^']*'|\{\s*"[^"]*"\s*\}|\{\s*'[^']*'\s*\}))+)\s*>([^<>{}]*)<\/\1\s*>/g, tagLink);
-            // lineOk: whole changed lines that a linkOnly file may change besides links, such as a
-            // meta title or a heading. Entry: {files, allow, prev?, next?, deny?, pair?}. A changed
-            // line (added or removed) is accepted when it is at most LINE_OK_MAX characters, matches
-            // one allow pattern (case-sensitive, anchored with ^ and $), matches no deny pattern
-            // (case-insensitive), and the lines just before and after it in the same version of the
-            // file match prev and next when they are given: a pattern, or a list of patterns for the
-            // nearest line first, then the one before it (a neighbour outside the patch never
-            // matches). With pair (the default) each allow pattern must accept as many added lines
-            // as removed lines, so a line can be reworded but not added or deleted. denyPatch still
-            // applies to every accepted line. A malformed entry holds every pull request.
+            // lineOk: whole changed lines that a linkOnly file may change besides links, such as a meta
+            // title or a heading. Entry: {files, allow, prev?, next?, deny?, pair?, frontmatter?}. A changed
+            // line is accepted when it is at most LINE_OK_MAX characters, matches one allow pattern
+            // (case-sensitive, anchored with ^ and $, no top-level |), matches no deny pattern (raw or folded,
+            // case-insensitive), is plain ASCII on a health lane, and the lines just before and after it in
+            // the same version of the file match prev and next when given (nearest first; a neighbour
+            // outside the patch never matches). frontmatter: the line must sit inside the --- block at the
+            // top of the file. pair (the default): in each change block, every allow pattern accepts as many
+            // added lines as removed lines, so a line can be reworded in place but not added, deleted or
+            // moved. pair false needs a prev check. A malformed entry holds every pull request.
             const LINE_OK_MAX = 300;
-            const LINE_OK_KEYS = new Set(['files', 'allow', 'prev', 'next', 'deny', 'pair']);
-            const anchored = (p) => typeof p === 'string' && p.length > 1 && p.startsWith('^') && p.endsWith('$') && !p.endsWith('\\$');
+            const LINE_MAX = 2000;
+            const HEALTH_OK = /^[\x20-\x7e\u2018\u2019\u201c\u201d\u2013\u00e9\u00b7]*$/;
+            const LINE_OK_KEYS = new Set(['files', 'allow', 'prev', 'next', 'deny', 'pair', 'frontmatter']);
+            const topAlt = (p) => {
+              let d = 0, cls = false;
+              for (let i = 0; i < p.length; i++) {
+                const c = p[i];
+                if (c === '\\') { i += 1; continue; }
+                if (cls) { if (c === ']') cls = false; continue; }
+                if (c === '[') cls = true; else if (c === '(') d += 1; else if (c === ')') d -= 1;
+                else if (c === '|' && d === 0) return true;
+                if (d < 0) return true;
+              }
+              return d !== 0;
+            };
+            const anchored = (p) => typeof p === 'string' && p.length > 1 && p.startsWith('^') && p.endsWith('$') && !p.endsWith('\\$') && !topAlt(p);
             const compileLineOk = (list) => {
               if (list === undefined) return [];
               if (!Array.isArray(list)) throw new Error('lineOk must be a list');
@@ -117,9 +211,11 @@ jobs:
                   return l;
                 };
                 const prev = ctx(e.prev, 'prev'), next = ctx(e.next, 'next');
-                for (const p of [...e.allow, ...prev, ...next]) if (!anchored(p)) bad(`has a pattern not anchored with ^ and $: ${String(p).slice(0, 60)}`);
+                for (const p of [...e.allow, ...prev, ...next]) if (!anchored(p)) bad(`has a pattern not anchored with ^ and $ (or with a top-level |): ${String(p).slice(0, 60)}`);
                 if (e.deny !== undefined && (!Array.isArray(e.deny) || e.deny.some((p) => typeof p !== 'string' || !p))) bad('has a deny that is not a list of patterns');
                 if (e.pair !== undefined && typeof e.pair !== 'boolean') bad('has a pair that is not true or false');
+                if (e.frontmatter !== undefined && typeof e.frontmatter !== 'boolean') bad('has a frontmatter that is not true or false');
+                if (e.pair === false && !prev.length) bad('has pair false without a prev check');
                 return {
                   files: e.files,
                   allow: e.allow.map((p) => new RegExp(p)),
@@ -127,139 +223,228 @@ jobs:
                   next: next.map((p) => new RegExp(p)),
                   deny: (e.deny || []).map((p) => new RegExp(p, 'i')),
                   pair: e.pair !== false,
+                  frontmatter: e.frontmatter === true,
                 };
               });
             };
-            const linkOnlyProblem = (patch, ignore, okRules = []) => {
-              const removed = [], added = [];
-              const lines = patch.split('\n');
-              // The n nearest lines before (step -1) or after (step 1) line i in the same version of
-              // the file: context lines and lines with the same sign count, the other side is skipped.
-              // Fewer than n come back when the patch shows fewer.
+            // Is line i of P inside the frontmatter block (line 1 "---" to the next "---")? Old-side lines
+            // come from baseLines when the workflow fetched the file, else only from the patch itself.
+            const inFrontmatter = (P, i, baseLines) => {
+              const known = new Map();
+              if (baseLines) baseLines.forEach((l, k) => known.set(k + 1, l));
+              else for (const x of P) if (x.sign === ' ' || x.sign === '-') known.set(x.oldNo, x.body);
+              const x = P[i];
+              if (known.get(1) !== '---' || x.oldNo < 2) return false;
+              for (let k = 2; k < x.oldNo; k++) if (!known.has(k) || known.get(k) === '---') return false;
+              if (x.sign === '-' && x.body === '---') return false;
+              return true;
+            };
+            const linkOnlyProblem = (P, ignore, okRules = [], opt = {}) => {
+              if (typeof P === 'string') P = parsePatch(P);
+              if (!P) return 'has a diff that cannot be read line by line';
+              // The n nearest lines before (step -1) or after (step 1) line i in the same version of the
+              // file: context lines and lines with the same sign count, the other side is skipped.
               const near = (i, step, sign, n) => {
                 const out = [];
-                for (let j = i + step; out.length < n && j >= 0 && j < lines.length; j += step) {
-                  if (lines[j].startsWith('@@')) break;
-                  if (lines[j][0] === ' ' || lines[j][0] === sign) out.push(lines[j].slice(1));
+                for (let j = i + step; out.length < n && j >= 0 && j < P.length; j += step) {
+                  if (P[j].sign === '@') break;
+                  if (P[j].sign === ' ' || P[j].sign === sign) out.push(P[j].body);
                 }
                 return out;
               };
               const fits = (res, got) => res.every((re, k) => k < got.length && re.test(got[k]));
               const okKey = (i, sign, body) => {
                 if (body.length > LINE_OK_MAX) return null;
+                if (opt.health && !HEALTH_OK.test(body)) return null;
                 for (let e = 0; e < okRules.length; e++) {
                   const r = okRules[e];
                   const a = r.allow.findIndex((re) => re.test(body));
-                  if (a < 0 || r.deny.some((re) => re.test(body))) continue;
+                  if (a < 0 || anyRe(r.deny, body)) continue;
                   if (!fits(r.prev, near(i, -1, sign, r.prev.length))) continue;
                   if (!fits(r.next, near(i, 1, sign, r.next.length))) continue;
+                  if (r.frontmatter && !inFrontmatter(P, i, opt.baseLines)) continue;
                   return { key: `${e}:${a}`, pair: r.pair };
                 }
                 return null;
               };
-              const okCount = new Map();
-              for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
-                let body = line.slice(1);
-                const ok = okKey(i, line[0], body);
-                if (ok) {
-                  if (ok.pair) { const c = okCount.get(ok.key) || 0; okCount.set(ok.key, c + (line[0] === '+' ? 1 : -1)); }
-                  continue;
-                }
+              // A reworded line must keep its shape: the line with its text taken out (text between tags, a
+              // trailing quoted value, a heading's words, an unquoted value) must be the same before and
+              // after, so attributes, keys and indentation cannot change while the words do.
+              const shape = (l) => l.replace(/>[^<>]*</g, '><').replace(/^(\s*#{1,6})\s.*$/, '$1')
+                .replace(/(["'])(?:(?!\1).)*\1(\s*,?\s*)$/, '$1$1$2').replace(/^(\s*[A-Za-z][\w-]*:)\s+[^"'\s].*$/, '$1')
+                .replace(/^(\s*)[^\s<>"'#].*$/, (m, sp) => (/[<>]/.test(m) ? m : sp));
+              const blocks = new Map();
+              const blk = (b) => { if (!blocks.has(b)) blocks.set(b, { removed: [], added: [], keys: new Map() }); return blocks.get(b); };
+              const bump = (B, key, sign, body) => B.keys.set(`${key}\u0000${shape(body)}`, (B.keys.get(`${key}\u0000${shape(body)}`) || 0) + (sign === '+' ? 1 : -1));
+              for (let i = 0; i < P.length; i++) {
+                const { sign } = P[i];
+                if (sign !== '+' && sign !== '-') continue;
+                const B = blk(P[i].block);
+                let body = P[i].body;
+                const ok = okKey(i, sign, body);
+                if (ok) { if (ok.pair) bump(B, ok.key, sign, body); continue; }
+                const before = body;
                 for (const re of ignore) body = body.replace(re, '');
+                if (body !== before && body.trim() === '') { bump(B, 'ignored', sign, before); continue; }
                 body = stripLinks(body).replace(/\s+/g, ' ').trim();
                 if (body === '') continue;
-                (line[0] === '+' ? added : removed).push(body);
+                (sign === '+' ? B.added : B.removed).push(body);
               }
-              const count = new Map();
-              for (const l of removed) count.set(l, (count.get(l) || 0) + 1);
-              for (const l of added) {
-                if (!count.get(l)) return `changes words, not only links: "${l.slice(0, 80)}"`;
-                count.set(l, count.get(l) - 1);
+              for (const B of blocks.values()) {
+                const count = new Map();
+                for (const l of B.removed) count.set(l, (count.get(l) || 0) + 1);
+                for (const l of B.added) {
+                  if (!count.get(l)) return `changes words, not only links: "${l.slice(0, 80)}"`;
+                  count.set(l, count.get(l) - 1);
+                }
+                for (const [l, n] of count) if (n > 0) return `removes or rewords text: "${l.slice(0, 80)}"`;
+                for (const [, n] of B.keys) if (n !== 0) return 'adds, deletes or moves a whole title, description or heading line instead of rewording one in place';
               }
-              for (const [l, n] of count) if (n > 0) return `removes or rewords text: "${l.slice(0, 80)}"`;
-              for (const [, n] of okCount) if (n !== 0) return 'adds or deletes a whole title, description or heading line instead of rewording one';
+              return null;
+            };
+
+            // futureDate: the publish date of a new post, read from its frontmatter only. The frontmatter
+            // must be plain "key: value" lines (comments, indented and list lines allowed); the field must
+            // appear exactly once as a plain unquoted key, and no other key may look like a date or publish key.
+            const postDateProblem = (P, field, today) => {
+              const lines = P.filter((x) => x.sign === '+').map((x) => x.body);
+              if (lines[0] !== '---') return 'does not start with a --- frontmatter line';
+              const end = lines.indexOf('---', 1);
+              if (end < 0) return 'has no closing --- frontmatter line';
+              let found = null;
+              for (const l of lines.slice(1, end)) {
+                if (!/^(?:[A-Za-z][A-Za-z0-9_-]*:(?:\s.*)?|#.*|\s+\S.*|)$/.test(l)) return `has a frontmatter line that is not a plain key: "${l.slice(0, 60)}"`;
+                const key = (l.match(/^([A-Za-z][A-Za-z0-9_-]*):/) || [])[1];
+                if (!key) { if (/^\s+["']?[\w-]*(date|publish)/i.test(l)) return 'has an indented date-like key'; continue; }
+                if (key === field) { if (found !== null) return `has ${field} more than once`; found = l.slice(key.length + 1).trim(); continue; }
+                if (/date|publish|release|schedul|live/i.test(key)) return `has another date-like key "${key}"`;
+              }
+              if (found === null) return `has no plain ${field} line in its frontmatter`;
+              const v = found.match(/^(?:"(\d{4}-\d{2}-\d{2})"|'(\d{4}-\d{2}-\d{2})'|(\d{4}-\d{2}-\d{2}))\s*(#.*)?$/);
+              if (!v) return `has a ${field} that is not a plain YYYY-MM-DD date`;
+              const d = v[1] || v[2] || v[3];
+              if (!(d > today)) return `has ${field} ${d}, which is not after today (${today}), so it would go live at once`;
               return null;
             };
 
             const IMAGE = /\.(jpe?g|png|webp|avif|gif)$/i;
+            const MARKDOWN = /\.mdx?$/i;
+            const TEXT = /\.txt$/i;
+            const DATA_EXT = /\.(ts|mts|cts|js|mjs|cjs|json)$/i;
+            const LANE_KEYS = new Set(['enabled', 'allow', 'deny', 'linkOnly', 'linkOnlyIgnore', 'lineOk', 'maxFiles', 'maxChangedLines',
+              'denyPatch', 'denySquashed', 'dataFiles', 'futureDate', 'binaryOk', 'addOnly', 'newFiles', 'hosts', 'health']);
             const todayInLA = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+            // Files that need their text on the default branch: modified files that a frontmatter lineOk entry covers.
+            const needsBase = (rules, f) => f.status === 'modified' && Array.isArray(rules && rules.lineOk)
+              && rules.lineOk.some((e) => e && e.frontmatter === true && Array.isArray(e.files) && hit(f.filename, e.files));
 
             // Returns the list of reasons to hold. Empty list means the files pass the rules.
             function evaluate(kind, rules, files, today) {
               const reasons = [];
               if (!rules || rules.enabled !== true) reasons.push(`auto-merge is off for "${kind}" branches in .github/seo-automerge.json`);
-              if (!rules) return reasons;
-              const maxFiles = rules.maxFiles ?? 40;
-              const maxLines = rules.maxChangedLines ?? 400;
-              const lines = files.reduce((n, f) => n + (f.additions || 0) + (f.deletions || 0), 0);
-              // denyPatch: regular expressions (case-insensitive). A pull request that adds or
-              // removes a line matching one is held. An entry may be {"pattern", "files"} to
-              // apply only to files matching those globs.
-              // linkOnlyIgnore: same shape as denyPatch, but case-sensitive and cut out of the line.
-              // A rule that cannot be compiled (bad regular expression, bad lineOk entry) holds the
-              // pull request instead of failing the run.
-              let denyPatch, ignore, lineOk;
+              if (!rules || typeof rules !== 'object') return reasons;
+              // denyPatch: regular expressions (case-insensitive), tested on each changed line and on its folded
+              // copy. An entry may be {"pattern", "files"} to apply only to files matching those globs.
+              // denySquashed: lowercase words held when they appear in a changed line with everything but
+              // letters and digits removed (catches "O.z-e mpic"). linkOnlyIgnore: same shape as denyPatch,
+              // case-sensitive, cut out of the line. Anything that cannot be compiled holds the pull request.
+              let denyPatch, ignore, lineOk, squashed;
+              const strList = (v, k) => { if (v !== undefined && (!Array.isArray(v) || v.some((d) => typeof d !== 'string' || !d))) throw new Error(`${k} must be a list of strings`); return v || []; };
               try {
-                denyPatch = (rules.denyPatch || []).map((p) => (typeof p === 'string'
-                  ? { re: new RegExp(p, 'i'), files: null, source: p }
-                  : { re: new RegExp(p.pattern, 'i'), files: p.files, source: p.pattern }));
-                ignore = (rules.linkOnlyIgnore || []).map((p) => (typeof p === 'string'
-                  ? { re: new RegExp(p, 'g'), files: null }
-                  : { re: new RegExp(p.pattern, 'g'), files: p.files }));
+                for (const k of Object.keys(rules)) if (!k.startsWith('_') && !LANE_KEYS.has(k)) throw new Error(`unknown key "${k}"`);
+                for (const k of ['allow', 'deny', 'linkOnly', 'dataFiles', 'binaryOk', 'newFiles', 'hosts']) strList(rules[k], k);
+                if (rules.health !== undefined && typeof rules.health !== 'boolean') throw new Error('health must be true or false');
+                const pat = (p, flags) => (typeof p === 'string'
+                  ? { re: new RegExp(p, flags), files: null, source: p }
+                  : { re: new RegExp(p.pattern, flags), files: strList(p.files, 'files'), source: p.pattern });
+                if (rules.denyPatch !== undefined && !Array.isArray(rules.denyPatch)) throw new Error('denyPatch must be a list');
+                if (rules.linkOnlyIgnore !== undefined && !Array.isArray(rules.linkOnlyIgnore)) throw new Error('linkOnlyIgnore must be a list');
+                denyPatch = (rules.denyPatch || []).map((p) => pat(p, 'i'));
+                ignore = (rules.linkOnlyIgnore || []).map((p) => pat(p, 'g'));
+                squashed = strList(rules.denySquashed, 'denySquashed');
+                if (squashed.some((w) => !/^[a-z0-9]+$/.test(w))) throw new Error('denySquashed words must be lowercase letters and digits');
                 lineOk = compileLineOk(rules.lineOk);
-                if (rules.dataFiles !== undefined && (!Array.isArray(rules.dataFiles) || rules.dataFiles.some((d) => typeof d !== 'string'))) throw new Error('dataFiles must be a list of paths');
+                const fd = rules.futureDate;
+                if (fd !== undefined && (!fd || !Array.isArray(fd.files) || !Array.isArray(fd.fields) || fd.fields.length !== 1 || !/^[A-Za-z][A-Za-z0-9_]*$/.test(fd.fields[0]))) throw new Error('futureDate needs files and exactly one plain field');
               } catch (e) {
                 reasons.push(`a rule in .github/seo-automerge.json cannot be used (${String(e && e.message).slice(0, 160)}), so nothing auto-merges until it is fixed`);
                 return reasons;
               }
+              const maxFiles = rules.maxFiles ?? 40;
+              const maxLines = rules.maxChangedLines ?? 400;
+              const lines = files.reduce((n, f) => n + (f.additions || 0) + (f.deletions || 0), 0);
+              const hosts = new Set((rules.hosts || []).map((h) => h.toLowerCase()));
               // dataFiles: exact paths of JSON data files under scripts/ that may be modified although
               // scripts/** is on the built-in list, such as a recorded SEO baseline that nothing reads
               // at build time. Exact names only, existing files only, and allow must list them too.
               const dataFile = (f, name) => f.status === 'modified' && name === f.filename
                 && /^scripts\/[A-Za-z0-9._-]+\.json$/.test(name) && (rules.dataFiles || []).includes(name);
               const future = rules.futureDate || null;
+              const addOnly = rules.addOnly === true;
               if (files.length === 0) reasons.push('no changed files');
               if (files.length > maxFiles) reasons.push(`${files.length} files changed, limit is ${maxFiles}`);
               if (lines > maxLines) reasons.push(`${lines} lines changed, limit is ${maxLines}`);
               for (const f of files) {
+                const name0 = f.filename;
                 const names = [f.filename, f.previous_filename].filter(Boolean);
                 for (const name of names) {
                   if (hitAnyCase(name, HARD_DENY) && !dataFile(f, name)) reasons.push(`\`${name}\` is never auto-merged`);
                   else if (hitAnyCase(name, rules.deny)) reasons.push(`\`${name}\` is on this repo's deny list`);
                   else if (!hit(name, rules.allow)) reasons.push(`\`${name}\` is outside the allowed paths`);
                 }
-                const binaryOk = f.status === 'added' && IMAGE.test(f.filename) && hit(f.filename, rules.binaryOk);
-                const needsPatch = denyPatch.length || hitAnyCase(f.filename, rules.linkOnly) || (future && hitAnyCase(f.filename, future.files));
-                if (needsPatch && typeof f.patch !== 'string' && !binaryOk) {
-                  reasons.push(`\`${f.filename}\` has no line-by-line diff to check (binary or too large)`);
-                } else if (typeof f.patch === 'string') {
-                  const rules_ = denyPatch.filter((d) => !d.files || hitAnyCase(f.filename, d.files));
-                  if (rules_.length) for (const line of f.patch.split('\n')) {
-                    if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue;
-                    const bad = rules_.find((d) => d.re.test(line.slice(1)));
-                    if (bad) { reasons.push(`\`${f.filename}\` adds or removes a protected line (rule: ${bad.source})`); break; }
-                  }
-                  if (hitAnyCase(f.filename, rules.linkOnly)) {
-                    const problem = linkOnlyProblem(f.patch, ignore.filter((g) => !g.files || hitAnyCase(f.filename, g.files)).map((g) => g.re),
-                      lineOk.filter((r) => hit(f.filename, r.files)));
-                    if (problem) reasons.push(`\`${f.filename}\` may only gain internal links inside existing sentences; this change ${problem}`);
-                  }
-                  if (future && hitAnyCase(f.filename, future.files)) {
-                    const fieldRe = new RegExp(`^\\+\\s*(${future.fields.join('|')})\\s*:\\s*(.*)$`);
-                    const dates = f.patch.split('\n').map((l) => l.match(fieldRe)).filter(Boolean);
-                    if (f.status !== 'added') reasons.push(`\`${f.filename}\` is not a new post, so its publish date cannot be checked`);
-                    else if (!dates.length) reasons.push(`\`${f.filename}\` has no ${future.fields.join(' or ')} line`);
-                    for (const d of dates) {
-                      const v = d[2].match(/^["']?(\d{4}-\d{2}-\d{2})["']?\s*(#.*)?$/);
-                      if (!v) reasons.push(`\`${f.filename}\` has a ${d[1]} that is not a plain YYYY-MM-DD date`);
-                      else if (!(v[1] > today)) reasons.push(`\`${f.filename}\` has ${d[1]} ${v[1]}, which is not after today (${today}), so it would go live at once`);
-                    }
+                // Status: the blog lane only adds files; the fix lane only modifies files, and adds one only
+                // where newFiles names its path. Removed, renamed, copied, mode-only and unknown statuses hold.
+                if (addOnly) { if (f.status !== 'added') reasons.push(`\`${name0}\` is ${f.status}; this branch type may only add new files`); }
+                else if (f.status === 'added') { if (!hit(name0, rules.newFiles)) reasons.push(`\`${name0}\` is a new file; new files only auto-merge where newFiles names their path`); }
+                else if (f.status !== 'modified') reasons.push(`\`${name0}\` is ${f.status}; only modified files auto-merge in this branch type`);
+                const binaryOk = f.status === 'added' && IMAGE.test(name0) && hit(name0, rules.binaryOk);
+                if (binaryOk) continue;
+                const md = MARKDOWN.test(name0);
+                if (addOnly && !(md && future && hitAnyCase(name0, future.files))) { reasons.push(`\`${name0}\` is not a Markdown post under futureDate files or an allowed image`); continue; }
+                if (typeof f.patch !== 'string') { reasons.push(`\`${name0}\` has no line-by-line diff to check (binary or too large)`); continue; }
+                const P = parsePatch(f.patch);
+                if (!P) { reasons.push(`\`${name0}\` has a diff that cannot be read line by line`); continue; }
+                const changed = P.filter((x) => x.sign === '+' || x.sign === '-');
+                const rules_ = denyPatch.filter((d) => !d.files || hitAnyCase(name0, d.files));
+                const builtIn = md ? MARKUP : CODE;
+                let lineProblem = null;
+                for (const x of changed) {
+                  const body = x.body;
+                  if (body.length > LINE_MAX) { lineProblem = `has a changed line over ${LINE_MAX} characters`; break; }
+                  const bad = anyRe(rules_.map((d) => d.re), body);
+                  if (bad) { lineProblem = `adds or removes a protected line (rule: ${rules_.find((d) => d.re === bad).source})`; break; }
+                  const sq = squashed.find((w) => squash(body).includes(w));
+                  if (sq) { lineProblem = `adds or removes a protected word (${sq})`; break; }
+                  const b2 = anyRe(builtIn, body);
+                  if (b2) { lineProblem = `adds or removes code, markup, a redirect or an indexing rule (built-in: ${b2.source.slice(0, 40)})`; break; }
+                  if (!md) {
+                    const out = [...new Set([...hostsIn(body), ...hostsIn(fold(body))])].filter((h) => !hosts.has(h));
+                    if (out.length) { lineProblem = `links to a host not on this repo's hosts list (${out[0].slice(0, 60)})`; break; }
                   }
                 }
-                if (rules.addOnly === true && f.status !== 'added') reasons.push(`\`${f.filename}\` is ${f.status}; this branch type may only add new files`);
-                if (rules.addOnly !== true && (f.status === 'removed' || f.status === 'renamed')) reasons.push(`\`${f.filename}\` is ${f.status}; deleting or moving files needs a person`);
+                if (lineProblem) { reasons.push(`\`${name0}\` ${lineProblem}`); continue; }
+                if (hitAnyCase(name0, rules.linkOnly)) {
+                  let baseLines = null;
+                  if (typeof f.baseText === 'string') {
+                    baseLines = f.baseText.split('\n');
+                    if (P.some((x) => (x.sign === ' ' || x.sign === '-') && baseLines[x.oldNo - 1] !== x.body)) { reasons.push(`\`${name0}\` does not match its text on the default branch; update the branch`); continue; }
+                  }
+                  const problem = linkOnlyProblem(P, ignore.filter((g) => !g.files || hitAnyCase(name0, g.files)).map((g) => g.re),
+                    lineOk.filter((r) => hit(name0, r.files)), { health: rules.health === true, baseLines });
+                  if (problem) reasons.push(`\`${name0}\` may only gain internal links inside existing sentences; this change ${problem}`);
+                } else if (!addOnly && !TEXT.test(name0)) {
+                  // Outside linkOnly only .ts/.js/.json data files and .txt files may change. A component or
+                  // markup file (.tsx, .astro, .md, .xml, .svg...) could show a "data line" as visible text.
+                  if (!DATA_EXT.test(name0)) reasons.push(`\`${name0}\` is a component, markup or other file outside linkOnly; only .ts, .js, .json and .txt files may change there`);
+                  else {
+                    const notData = changed.find((x) => !DATA_LINE.test(x.body.trim()));
+                    if (notData) reasons.push(`\`${name0}\` is a code or data file and this line is not a plain data line or comment: "${notData.body.trim().slice(0, 80)}"`);
+                  }
+                }
+                if (future && hitAnyCase(name0, future.files)) {
+                  if (f.status !== 'added') reasons.push(`\`${name0}\` is not a new post, so its publish date cannot be checked`);
+                  else { const p = postDateProblem(P, future.fields[0], today); if (p) reasons.push(`\`${name0}\` ${p}`); }
+                }
               }
               return [...new Set(reasons)];
             }
@@ -289,9 +474,26 @@ jobs:
             }
 
             const cfgFile = await github.rest.repos.getContent({ owner, repo, path: '.github/seo-automerge.json', ref: base });
-            const cfg = JSON.parse(Buffer.from(cfgFile.data.content, 'base64').toString('utf8'));
+            // A rule file that does not parse holds every pull request (evaluate gets no rules).
+            let cfg = null;
+            try { cfg = JSON.parse(Buffer.from(cfgFile.data.content, 'base64').toString('utf8')); } catch (e) { core.warning('.github/seo-automerge.json is not valid JSON'); }
+            const lane = cfg && typeof cfg === 'object' ? cfg[kind] : null;
             const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
-            const reasons = evaluate(kind, cfg[kind], files, todayInLA());
+            // Frontmatter lineOk entries need the file's text at the merge base (the commit the
+            // patch was computed against) to tell the frontmatter block from the body. If it cannot
+            // be read, those lines are judged from the patch alone, which holds more.
+            if (files.some((f) => needsBase(lane, f))) {
+              const cmp = await github.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${base}...${sha}` });
+              const mb = cmp.data.merge_base_commit.sha;
+              for (const f of files) {
+                if (!needsBase(lane, f)) continue;
+                try {
+                  const c = await github.rest.repos.getContent({ owner, repo, path: f.filename, ref: mb });
+                  if (c.data && c.data.encoding === 'base64') f.baseText = Buffer.from(c.data.content, 'base64').toString('utf8');
+                } catch (e) { core.info(`Could not read ${f.filename} at ${mb}.`); }
+              }
+            }
+            const reasons = evaluate(kind, lane, files, todayInLA());
 
             const full = (await github.rest.pulls.get({ owner, repo, pull_number: pr.number })).data;
             if (full.head.sha !== sha) { core.info('The pull request moved to a newer commit; that commit gets its own run.'); return; }
