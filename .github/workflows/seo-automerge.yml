@@ -376,10 +376,12 @@ jobs:
               const pairProblem = (ro, ad) => {
                 const o = oldL.get(ro.oldNo), n = newL.get(ad.newNo);
                 if (o === undefined || n === undefined) return 'not a shape';
-                if (md && !inTop(oldL, ro.oldNo) && !inTop(newL, ad.newNo) && o !== n && mdText(n, prot) === mdText(o, prot)) return null;
+                if (md && ro.oldNo > 1 && !/^\s{0,3}(-{3,}|={3,}|\*{3,}|_{3,}|`{3,}|~{3,}|[-*+] |\d+[.)] |>|\[)/.test(o) && !inTop(oldL, ro.oldNo) && !inTop(newL, ad.newNo) && o !== n && mdText(n, prot) === mdText(o, prot)) return null;
                 if (astro && !inTop(newL, ad.newNo) && /^\s*<Base\s/.test(n)) return baseProblem(o, n);
                 const A = shapeOf(oldL, ro.oldNo), B = shapeOf(newL, ad.newNo);
                 if (!A || !B || A.kind !== B.kind || A.skel !== B.skel) return 'not a shape';
+                const nums = (x) => x.match(/\d+/g) || [];
+                if (health && nums(B.value).some((d) => !nums(A.value).includes(d))) return `has a ${B.kind} with a new number, which never merges on its own on a health site`;
                 const t = textProblem(B.value, B.kind, health);
                 return t ? `has a ${B.kind === 'heading' ? 'heading' : B.kind} that ${t}` : null;
               };
@@ -439,7 +441,7 @@ jobs:
             // images whose URL is not relative or on hosts.
             const FM_NEVER = new Set(['canonical', 'permalink', 'redirect', 'redirectfrom', 'redirectto', 'layout', 'noindex', 'nofollow', 'robots',
               'url', 'path', 'route', 'href', 'slug', 'id', 'alias', 'aliases', 'lang', 'locale', 'draftpath']);
-            const FM_ITEM = `(?:"[^"\\\\]*"|'[^']*'|[^\\s"'&*!|>%@\`{}\\[\\],#][^,\\[\\]{}#]*?)`;
+            const FM_ITEM = `(?:"[^"\\\\]*"|'[^']*'|[^\\s"'&*!|>%@\`{}\\[\\],#](?:[^,\\[\\]{}#\\s]|\\s+(?=[^,\\[\\]{}#\\s]))*)`;
             const FM_VALUE = new RegExp(`^(?:"(?:[^"\\\\]|\\\\.)*"|'(?:[^']|'')*'|[^\\s"'&*!|>%@\`{}\\[\\]#,][^#]*?|\\[\\s*(?:${FM_ITEM}(?:\\s*,\\s*${FM_ITEM})*\\s*,?)?\\s*\\]|)\\s*(?:#.*)?$`);
             const unq = (v) => v.trim().replace(/\s+#.*$/, '').replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
             const slugOf = (text, key) => {
@@ -636,6 +638,9 @@ jobs:
                 if (!addOnly) {
                   let baseLines = null;
                   if (typeof f.baseText === 'string') baseLines = f.baseText.split('\n');
+                  const fdField = '(?:date|publishedAt)';
+                  const fdm = fdField && md && typeof f.baseText === 'string' && f.baseText.match(new RegExp(`^${fdField}:\\s*["']?(\\d{4}-\\d{2}-\\d{2})`, 'm'));
+                  if (fdm && fdm[1] >= today) { reasons.push(`\`${name0}\` is a post that is not live yet (${fdField} ${fdm[1]}); edits to scheduled posts wait for Arsany`); continue; }
                   const problem = shapeProblem(P, name0, { health, baseLines, chains, prot, code });
                   if (problem) reasons.push(`\`${name0}\` ${problem}`);
                 }
