@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -111,6 +112,18 @@ export function ContactForm() {
           className="w-full bg-transparent border border-[color:var(--color-border)] px-4 py-3 text-base resize-y focus:border-[color:var(--color-accent)] focus:outline-none transition-colors"
         />
       </div>
+
+      <p id="contact-privacy" className="text-sm text-[color:var(--color-muted)]">
+        I use your name, email and message only to reply. Nothing is added to a
+        mailing list. See the{" "}
+        <Link
+          href="/privacy"
+          className="text-[color:var(--color-text)] underline decoration-[color:var(--color-accent)] underline-offset-4 hover:text-[color:var(--color-accent)]"
+        >
+          privacy policy
+        </Link>
+        .
+      </p>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <button

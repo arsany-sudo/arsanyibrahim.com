@@ -59,6 +59,10 @@ export function Work() {
             </div>
           </FadeIn>
         </ul>
+        <p className="mt-6 text-sm text-[color:var(--color-muted)] max-w-3xl">
+          Results from past client work under specific conditions. Every account is different, and past results do not
+          guarantee future results.
+        </p>
       </div>
     </section>
   );

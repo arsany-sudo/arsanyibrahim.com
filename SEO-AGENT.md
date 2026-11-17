@@ -20,6 +20,7 @@ Read by the scheduled SEO tasks (Site fix, Blog, monthly strategist). The task p
 - Never edit anything under .github, package files, config files, env files or app/api.
 
 ## Off limits on this site
+- Compliance rules in AGENTS.md apply to every change. Legal pages (app/privacy, app/terms, app/accessibility), compliance/trackers.json and tests/compliance.spec.ts are off limits.
 - The contact form and app/contact, app/api, tracking or analytics code.
 - lib/site.ts facts: numbers, titles, bios, company descriptions and outbound company URLs. A wrong fact or a dead outbound link is reported, not rewritten.
 - No blog on this site: Run: Weekly blog is off. Blog auto-merge is disabled in .github/seo-automerge.json.

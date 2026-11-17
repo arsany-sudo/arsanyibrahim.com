@@ -1,0 +1,24 @@
+{
+  "_readme": "Every outside company or host this site sends visitor data to. loads=browser: the visitor's browser contacts these hosts; the compliance guard fails on any browser request to a host not listed here, and on any waitsForConsent host that is contacted before consent. loads=server: data our server or hosting passes on (never contacted by the browser). Every vendor must be named in the privacy policy at policySection. Change this file, app/privacy/page.tsx (and its Last updated date) and the CSP in next.config.ts in the same pull request.",
+  "privacyPolicyPath": "/privacy",
+  "trackers": [
+    {
+      "vendor": "Vercel",
+      "hosts": [],
+      "loads": "server",
+      "purpose": "Hosting, content delivery and server logs",
+      "data": "IP address, user agent, requested URL, time of request",
+      "waitsForConsent": false,
+      "policySection": "#vendors"
+    },
+    {
+      "vendor": "Resend",
+      "hosts": ["api.resend.com"],
+      "loads": "server",
+      "purpose": "Delivers contact form submissions to the site owner's inbox",
+      "data": "Name, email address and message typed into the contact form",
+      "waitsForConsent": false,
+      "policySection": "#vendors"
+    }
+  ]
+}

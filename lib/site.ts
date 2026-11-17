@@ -185,14 +185,15 @@ export const WORK: ReadonlyArray<{
   result: string;
 }> = [
   {
-    client: "RE Pharmacy",
-    industry: "Specialty Pharmacy",
+    // Anonymized on purpose: never name or describe this client in a way that identifies them.
+    client: "Pharmacy client",
+    industry: "Healthcare",
     year: "2024",
     challenge:
-      "Drive qualified patient enrollment for a specialty pharmacy operating in a regulated, low-trust category.",
+      "Drive qualified inquiries for a pharmacy operating in a regulated, low-trust category.",
     whatWeDid:
-      "Built a paid search and Meta program with creative and landing pages tailored to specific condition cohorts. Layered conversion tracking with HIPAA-conscious tagging.",
-    result: "3x qualified patient inquiries quarter over quarter.",
+      "Built a paid search and Meta program with creative and landing pages tailored to each service line.",
+    result: "3x qualified inquiries quarter over quarter.",
   },
   {
     client: "CocoJojo",

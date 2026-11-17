@@ -11,6 +11,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/writing`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/press`, lastModified: now, changeFrequency: "yearly", priority: 0.6 },
     { url: `${base}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.6 },
+    { url: `${base}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${base}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${base}/accessibility`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   const companyRoutes: MetadataRoute.Sitemap = COMPANIES.map((c) => ({
