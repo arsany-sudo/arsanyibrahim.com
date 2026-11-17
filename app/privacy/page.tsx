@@ -99,8 +99,8 @@ export default function PrivacyPage() {
 
       <h2 id="retention">How long we keep it</h2>
       <p>
-        We keep contact messages for as long as we need them to respond and to keep a record of the conversation
-        [CONFIRM: retention period for contact emails, for example 3 years]. Server logs are kept by Vercel for a
+        We keep contact messages only as long as we need them to respond and to keep a record of the conversation,
+        then delete them. Server logs are kept by Vercel for a
         limited period set by its plan, after which they are deleted.
       </p>
 

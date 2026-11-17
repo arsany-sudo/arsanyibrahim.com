@@ -45,8 +45,7 @@ export default function AccessibilityPage() {
         If anything on this site is hard to use, tell us what page you were on and what went wrong, and we will work to
         fix it and get you the information another way in the meantime. Email{" "}
         <a href={`mailto:${PERSON.email}`}>{PERSON.email}</a> or call{" "}
-        <a href={`tel:${PERSON.phoneRaw}`}>{PERSON.phone}</a>. We aim to reply within [CONFIRM: response time, for
-        example 5 business days].
+        <a href={`tel:${PERSON.phoneRaw}`}>{PERSON.phone}</a>. We will reply as soon as we can.
       </p>
     </LegalPage>
   );
