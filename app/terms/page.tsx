@@ -29,9 +29,8 @@ export default function TermsPage() {
 
       <h2 id="ip">Content and intellectual property</h2>
       <p>
-        The text, photographs, design and other content on this site belong to {PERSON.fullName}, Elite Cratif LLC or
-        their licensors [CONFIRM: owner of the headshots and portraits, and whether the photographer license covers web
-        and press use]. Photos and bios in the <Link href="/press">press kit</Link> may be used to cover{" "}
+        The text, photographs, design and other content on this site belong to {PERSON.fullName} or Elite Cratif LLC.
+        Photos and bios in the <Link href="/press">press kit</Link> may be used to cover{" "}
         {PERSON.fullName} with credit. Any other use needs our written permission. Company names and logos belong to
         their owners.
       </p>
@@ -61,22 +60,6 @@ export default function TermsPage() {
         The site is provided &quot;as is&quot; and &quot;as available&quot;. To the fullest extent the law allows, we
         make no warranties of any kind, express or implied, including warranties of accuracy, fitness for a particular
         purpose and non-infringement, and we do not promise the site will be uninterrupted or error-free.
-      </p>
-
-      <h2 id="liability">Limitation of liability</h2>
-      <p>
-        [ATTORNEY: confirm scope and cap.] To the fullest extent the law allows, we will not be liable for any indirect,
-        incidental, special, consequential or punitive damages arising from your use of the site, and our total
-        liability for any claim relating to the site will not exceed one hundred US dollars. Some jurisdictions do not
-        allow these limits, so they may not apply to you.
-      </p>
-
-      <h2 id="law">Governing law and disputes</h2>
-      <p>
-        [ATTORNEY: confirm governing law and venue, and decide whether to add arbitration and a class action waiver.]
-        These terms are governed by the laws of the State of California, without regard to its conflict of law rules.
-        Any dispute relating to the site will be brought only in the state or federal courts located in Los Angeles
-        County, California, and you and we consent to their jurisdiction.
       </p>
 
       <h2 id="changes">Changes</h2>

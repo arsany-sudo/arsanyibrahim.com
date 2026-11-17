@@ -87,7 +87,7 @@ Severity is about legal and fine exposure for this site as it stands.
 
 ## 5. Needs Arsany
 
-1. Approve or edit the three legal pages and resolve every [CONFIRM] marker (the guard fails until they are gone).
+1. Done 2026-11-17: the [CONFIRM] and [ATTORNEY] markers were resolved (see section 7 answers).
 2. Proof on file for the $20M+, 3x, 1.8 to 3.4 ROAS and 142% claims, and written permission from CocoJojo and Papa K's to be named with results.
 3. Fix "eight years" versus founded 2021.
 4. Verify `arsanyibrahim.com` in Resend (or confirm `RESEND_FROM` in Vercel), add DMARC, send one test message.
@@ -96,7 +96,7 @@ Severity is about legal and fine exposure for this site as it stands.
 
 ## 6. Needs an attorney
 
-- Terms: limitation of liability scope and cap, governing law and venue, whether to add arbitration and a class action waiver.
+- Terms: limitation of liability, governing law and venue, arbitration and class action waiver. The drafted clauses were removed from the live terms on 2026-11-17 at Arsany's direction and wait for this review; only the warranty disclaimer remains.
 - Privacy policy: overall review; confirm CCPA applicability statement.
 - Whether naming clients with results needs anything beyond their written consent.
 
@@ -104,17 +104,17 @@ Severity is about legal and fine exposure for this site as it stands.
 
 1. Is Elite Cratif LLC the operator of arsanyibrahim.com, or Arsany personally?
 2. Is 3952 City Terrace Dr a business address you want public?
-3. How long do you keep contact emails? (privacy policy retention)
-4. What response time do you want to promise for accessibility requests?
+3. How long do you keep contact emails? Answer: only as long as needed, then deleted (no fixed period).
+4. What response time do you want to promise for accessibility requests? Answer: no fixed time; "as soon as we can".
 5. Which business email provider hosts arsany@elitecreatif.com? (Google Workspace per SPF; the policy names it only generically)
-6. Who owns the headshots and does the license allow press redistribution?
+6. Who owns the headshots and does the license allow press redistribution? Answer: Arsany owns them; press use with credit is allowed.
 7. Is Elite Cratif LLC below the CCPA thresholds?
 8. Does the Toned.health description match Toned's approved copy?
 
 ## Handoff (this repo has no other technical handoff file)
 
 - State: PR #14 from `compliance/20261117`, not merged. Checks run: `npm run lint` clean, `npm run build` passes, `npx playwright test` 8 passed and 1 failed (draft markers, intended). Guard failure proof run on a deleted scratch branch.
-- Unfinished: the [CONFIRM] and [ATTORNEY] markers on the three legal pages; the claims decisions in finding 2.
+- Unfinished: attorney review of the privacy policy and terms (liability, venue and dispute clauses removed until then); the claims decisions in finding 2.
 - First next action: Arsany answers the questions in section 7, then whoever picks this up replaces the markers and reruns `npm run check`.
 
 ## 8. Sources (all checked 2026-11-17)
