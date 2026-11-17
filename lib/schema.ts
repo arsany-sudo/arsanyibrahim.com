@@ -28,7 +28,6 @@ function personNode() {
     description: PERSON.description,
     disambiguatingDescription: PERSON.disambiguatingDescription,
     worksFor: { "@id": eliteCreatif.schemaId },
-    founder: COMPANIES.map((c) => ({ "@id": c.schemaId })),
     address: {
       "@type": "PostalAddress",
       addressLocality: PERSON.address.locality,
