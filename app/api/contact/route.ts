@@ -70,10 +70,8 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error(
-      "[contact] RESEND_API_KEY is not configured. Logging submission.",
-      { name: cleanName, email: cleanEmail, message: cleanMessage },
-    );
+    // Never log the submission itself: names, emails and messages are personal data.
+    console.error("[contact] RESEND_API_KEY is not configured. Submission dropped.");
     return NextResponse.json(
       {
         error:

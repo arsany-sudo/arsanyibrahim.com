@@ -107,8 +107,16 @@ export default function RootLayout({
         <JsonLd id="schema-master-graph" data={masterGraph()} />
       </head>
       <body className="min-h-full flex flex-col">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-[color:var(--color-accent)] focus:text-[color:var(--color-bg)] focus:px-4 focus:py-2 focus:text-sm"
+        >
+          Skip to content
+        </a>
         <Nav />
-        <main className="flex-1">{children}</main>
+        <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

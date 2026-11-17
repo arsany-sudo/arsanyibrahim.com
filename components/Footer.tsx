@@ -39,14 +39,28 @@ export function Footer() {
               </li>
             ))}
           </ul>
+          <ul
+            aria-label="Legal"
+            className="flex flex-wrap gap-x-5 text-sm text-[color:var(--color-muted)]"
+          >
+            {[
+              { href: "/press", label: "Press kit" },
+              { href: "/privacy", label: "Privacy policy" },
+              { href: "/terms", label: "Terms of use" },
+              { href: "/accessibility", label: "Accessibility" },
+            ].map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className="inline-block py-1 hover:text-[color:var(--color-text)] underline underline-offset-4"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
           <p className="text-xs text-[color:var(--color-muted)]">
-            © {new Date().getFullYear()} Arsany Ibrahim. All rights reserved.{" "}
-            <Link
-              href="/press"
-              className="hover:text-[color:var(--color-text)] underline underline-offset-4"
-            >
-              Press kit
-            </Link>
+            © {new Date().getFullYear()} Arsany Ibrahim. All rights reserved.
           </p>
         </div>
       </div>

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:compliance": "playwright test",
+    "check": "npm run lint && npm run build && npm run test:compliance"
   },
   "dependencies": {
     "framer-motion": "^12.39.0",
@@ -16,6 +18,8 @@
     "resend": "^6.12.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
